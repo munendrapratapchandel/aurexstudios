@@ -39,18 +39,37 @@ export interface CurrentlyBuilding {
   progress: number;
   statusText: string;
   link?: string;
+  badgeLabel?: string;
+  progressLabel?: string;
+  ctaText?: string;
+  ctaLink?: string;
 }
 
 export interface WorkspaceDashboard {
   title: string;
   badge: string;
+  subtitle?: string;
+  terminalPrompt?: string; // e.g. "aurex@workspace:~$"
+  tabLabels?: {
+    about?: string;
+    works?: string;
+    hobbies?: string;
+    skills?: string;
+    socials?: string;
+  };
+  aboutTitle?: string;
   aboutBio: string;
+  philosophyBadge?: string;
   developerPhilosophy: string;
-  currentlyBuilding: CurrentlyBuilding;
   experienceYears: string;
   completedProjectsCount: string;
   happyClientsCount: string;
   codeLinesCount: string;
+  experienceLabel?: string;
+  completedProjectsLabel?: string;
+  happyClientsLabel?: string;
+  codeLinesLabel?: string;
+  currentlyBuilding: CurrentlyBuilding;
   mediaUrl: string;
 }
 
@@ -164,6 +183,32 @@ export interface ContactRequest {
   createdAt: string;
 }
 
+export interface ContactGuarantee {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+}
+
+export interface ContactContent {
+  badge: string;
+  title: string;
+  description: string;
+  responseTimeText?: string;
+  guarantees: ContactGuarantee[];
+  directEmail?: string;
+  directDiscordTitle?: string;
+  directDiscordDesc?: string;
+  directDiscordUsername?: string;
+  directDiscordUrl?: string;
+  directDiscordButtonText?: string;
+  servicesList: string[];
+  budgetTiers: string[];
+  timelineOptions: string[];
+  formSuccessTitle?: string;
+  formSuccessMessage?: string;
+}
+
 export interface FaqItem {
   id: string;
   question: string;
@@ -241,6 +286,7 @@ export interface DatabaseSchema {
   projects: Project[];
   feedback: FeedbackItem[];
   contactRequests: ContactRequest[];
+  contactContent?: ContactContent;
   faqs: FaqItem[];
   media: MediaItem[];
   visitorMetrics: VisitorMetrics;

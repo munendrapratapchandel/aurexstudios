@@ -10,6 +10,7 @@ import {
   getFeaturedProjects,
   getApprovedFeedback,
   getVisitorMetrics,
+  getContactContent,
 } from '@/lib/db';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -37,6 +38,7 @@ export default function HomePage() {
   const featuredProjects = getFeaturedProjects();
   const feedback = getApprovedFeedback();
   const visitorMetrics = getVisitorMetrics();
+  const contactContent = getContactContent();
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-[#07080c] dark:text-white">
@@ -79,7 +81,7 @@ export default function HomePage() {
         <FeedbackSection feedbackList={feedback} />
 
         {/* 7. Contact / "Let's Build Something" */}
-        <ContactSection socials={socials} />
+        <ContactSection socials={socials} content={contactContent} />
       </main>
 
       <Footer

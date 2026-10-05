@@ -2,7 +2,22 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DatabaseSchema, Service, Project, FeedbackItem, ContactRequest, FaqItem, MediaItem, ServiceSection, ServicePlan, Developer, DeveloperSkill, DeveloperSocial } from '@/types';
+import {
+  DatabaseSchema,
+  Service,
+  Project,
+  FeedbackItem,
+  ContactRequest,
+  FaqItem,
+  MediaItem,
+  ServiceSection,
+  ServicePlan,
+  Developer,
+  DeveloperSkill,
+  DeveloperSocial,
+  ContactContent,
+  ContactGuarantee,
+} from '@/types';
 import {
   LayoutDashboard,
   Home,
@@ -37,6 +52,14 @@ import {
   Edit,
   ArrowUpRight,
   TrendingUp,
+  Terminal,
+  Flame,
+  Cpu,
+  Heart,
+  Clock,
+  Zap,
+  Mail,
+  Sliders,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -49,11 +72,13 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<
     | 'overview'
     | 'home'
+    | 'workspace'
     | 'services'
     | 'works'
     | 'developers'
     | 'feedback'
     | 'requests'
+    | 'contact'
     | 'faqs'
     | 'socials'
     | 'media'
@@ -616,11 +641,13 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
               { id: 'home', label: 'Home & Hero CMS', icon: Home },
+              { id: 'workspace', label: 'Workspace Cockpit', icon: Terminal },
               { id: 'services', label: 'Services & Plans', icon: Layers },
               { id: 'works', label: 'Works Portfolio', icon: FolderGit2 },
               { id: 'developers', label: 'Developers & Team', icon: Users, badge: data.developers?.length },
               { id: 'feedback', label: 'Feedback Moderation', icon: MessageSquare, badge: data.feedback?.filter((f) => f.status === 'pending').length },
               { id: 'requests', label: 'Client Inquiries', icon: Inbox, badge: data.contactRequests?.filter((r) => r.status === 'New').length },
+              { id: 'contact', label: 'Contact Section', icon: MessageSquare },
               { id: 'faqs', label: 'FAQ Manager', icon: HelpCircle },
               { id: 'socials', label: 'Socials & Hobbies', icon: Share2 },
               { id: 'media', label: 'Media Library', icon: Image },
@@ -1119,6 +1146,859 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                   <span>{saving ? 'Writing to Database...' : 'Save Home & Dashboard to Database'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: WORKSPACE COCKPIT CMS (Master Access to Every Detail from Image) */}
+        {activeTab === 'workspace' && (
+          <div className="p-8 max-w-5xl space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                    <Terminal className="h-3.5 w-3.5" />
+                  </span>
+                  <h2 className="text-2xl font-bold tracking-tight text-white">
+                    Workspace Cockpit CMS
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Full granular control to edit every line, terminal prompt, tabs, stats, philosophy, and Currently Building engine.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  saveContentChanges({
+                    workspaceDashboard: data.workspaceDashboard,
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                <span>{saving ? 'Writing Changes...' : 'Save Cockpit Changes'}</span>
+              </button>
+            </div>
+
+            {/* LIVE PREVIEW BANNER */}
+            <div className="rounded-3xl border border-sky-500/20 bg-gradient-to-r from-sky-500/5 via-[#0e111a] to-indigo-500/5 p-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <span className="font-mono text-xs text-sky-400 font-semibold">
+                    {data.workspaceDashboard?.terminalPrompt || 'aurex@workspace:~$'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] text-sky-300 font-medium">
+                    {data.workspaceDashboard?.tabLabels?.about || 'About'}
+                  </span>
+                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                    {data.workspaceDashboard?.tabLabels?.works || 'Works Spotlight'}
+                  </span>
+                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                    {data.workspaceDashboard?.tabLabels?.hobbies || 'Hobbies'}
+                  </span>
+                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                    {data.workspaceDashboard?.tabLabels?.skills || 'Experience & Stack'}
+                  </span>
+                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                    {data.workspaceDashboard?.tabLabels?.socials || 'Socials'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="md:col-span-2 space-y-2">
+                  <div className="font-bold text-white text-sm">
+                    {data.workspaceDashboard?.aboutTitle || 'About Aurex Studio'}
+                  </div>
+                  <p className="text-slate-400 line-clamp-2">
+                    {data.workspaceDashboard?.aboutBio}
+                  </p>
+                  <div className="flex items-center gap-2 pt-2">
+                    <span className="font-mono font-bold text-sky-400">
+                      {data.workspaceDashboard?.experienceYears || '6+ Years'}
+                    </span>
+                    <span className="text-slate-500">
+                      {data.workspaceDashboard?.experienceLabel || 'Experience'}
+                    </span>
+                    <span className="text-slate-700">|</span>
+                    <span className="font-mono font-bold text-sky-400">
+                      {data.workspaceDashboard?.completedProjectsCount || '85+'}
+                    </span>
+                    <span className="text-slate-500">
+                      {data.workspaceDashboard?.completedProjectsLabel || 'Builds Shipped'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-3 space-y-1.5">
+                  <span className="text-[10px] font-mono font-bold text-amber-400 uppercase">
+                    {data.workspaceDashboard?.currentlyBuilding?.badgeLabel || 'CURRENTLY BUILDING'}
+                  </span>
+                  <div className="font-semibold text-white text-xs truncate">
+                    {data.workspaceDashboard?.currentlyBuilding?.title}
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    {data.workspaceDashboard?.currentlyBuilding?.progressLabel || 'Milestone Progress'}:{' '}
+                    <span className="text-sky-400 font-mono font-bold">
+                      {data.workspaceDashboard?.currentlyBuilding?.progress ?? 94}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1. TERMINAL STATUS BAR & SHELL PROMPT */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Terminal className="h-4 w-4" />
+                  <span>1. Terminal Top Bar & Tabs</span>
+                </h3>
+                <span className="text-[11px] text-slate-500 font-mono">Header Section</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Shell Terminal Prompt Text
+                </label>
+                <input
+                  type="text"
+                  value={data.workspaceDashboard?.terminalPrompt || 'aurex@workspace:~$'}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: {
+                        ...data.workspaceDashboard,
+                        terminalPrompt: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="aurex@workspace:~$"
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white font-mono outline-none focus:border-sky-500"
+                />
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Displayed next to the Mac traffic light dots on the cockpit header.
+                </p>
+              </div>
+
+              {/* 5 Tab Titles */}
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400 mb-2">
+                  Cockpit Tab Names (Custom Labels)
+                </label>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                  <div>
+                    <span className="block text-[11px] text-slate-500 font-mono">Tab 1: About</span>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.tabLabels?.about ?? 'About'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            tabLabels: {
+                              ...data.workspaceDashboard?.tabLabels,
+                              about: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-[11px] text-slate-500 font-mono">Tab 2: Works</span>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.tabLabels?.works ?? 'Works Spotlight'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            tabLabels: {
+                              ...data.workspaceDashboard?.tabLabels,
+                              works: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-[11px] text-slate-500 font-mono">Tab 3: Hobbies</span>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.tabLabels?.hobbies ?? 'Hobbies'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            tabLabels: {
+                              ...data.workspaceDashboard?.tabLabels,
+                              hobbies: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-[11px] text-slate-500 font-mono">Tab 4: Skills</span>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.tabLabels?.skills ?? 'Experience & Stack'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            tabLabels: {
+                              ...data.workspaceDashboard?.tabLabels,
+                              skills: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-[11px] text-slate-500 font-mono">Tab 5: Socials</span>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.tabLabels?.socials ?? 'Socials'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            tabLabels: {
+                              ...data.workspaceDashboard?.tabLabels,
+                              socials: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. COCKPIT SECTION TITLE & BADGE */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>2. Section Heading & Intro</span>
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Badge Pill Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.badge || 'WORKSPACE COCKPIT'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: { ...data.workspaceDashboard, badge: e.target.value },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Main Heading Title
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.title || 'Explore Aurex Studio Workspace'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: { ...data.workspaceDashboard, title: e.target.value },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Subtitle / Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={data.workspaceDashboard?.subtitle || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: { ...data.workspaceDashboard, subtitle: e.target.value },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  placeholder="An interactive look inside my engineering discipline, active build pipelines..."
+                />
+              </div>
+            </div>
+
+            {/* 3. ABOUT TAB CONTENT (LEFT COLUMN OF IMAGE) */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>3. About Aurex Studio (Tab 1 Left Column)</span>
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  About Heading
+                </label>
+                <input
+                  type="text"
+                  value={data.workspaceDashboard?.aboutTitle || 'About Aurex Studio'}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: { ...data.workspaceDashboard, aboutTitle: e.target.value },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Bio Paragraph / Studio Description
+                </label>
+                <textarea
+                  rows={4}
+                  value={data.workspaceDashboard?.aboutBio || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: { ...data.workspaceDashboard, aboutBio: e.target.value },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500 leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 pt-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Philosophy Badge Label
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.philosophyBadge || 'CORE ENGINEERING PHILOSOPHY'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          philosophyBadge: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Philosophy Quote
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={data.workspaceDashboard?.developerPhilosophy || ''}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          developerPhilosophy: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500 italic"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. STAT COUNTERS MATRIX (ALL 4 CARDS: VALUE & LABEL) */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>4. Metric Stat Cards (Value & Label)</span>
+                </h3>
+                <span className="text-[11px] text-slate-500 font-mono">4 Dashboard Counters</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Stat 1 */}
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-4 space-y-3">
+                  <span className="text-[10px] font-mono uppercase text-sky-400 block font-bold">
+                    Stat Card #1
+                  </span>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Value</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.experienceYears || '6+ Years'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            experienceYears: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white font-mono font-bold outline-none focus:border-sky-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Label</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.experienceLabel || 'Experience'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            experienceLabel: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-slate-300 outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Stat 2 */}
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-4 space-y-3">
+                  <span className="text-[10px] font-mono uppercase text-sky-400 block font-bold">
+                    Stat Card #2
+                  </span>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Value</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.completedProjectsCount || '85+'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            completedProjectsCount: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white font-mono font-bold outline-none focus:border-sky-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Label</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.completedProjectsLabel || 'Builds Shipped'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            completedProjectsLabel: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-slate-300 outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Stat 3 */}
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-4 space-y-3">
+                  <span className="text-[10px] font-mono uppercase text-sky-400 block font-bold">
+                    Stat Card #3
+                  </span>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Value</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.happyClientsCount || '60+'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            happyClientsCount: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white font-mono font-bold outline-none focus:border-sky-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Label</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.happyClientsLabel || 'Global Clients'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            happyClientsLabel: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-slate-300 outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Stat 4 */}
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-4 space-y-3">
+                  <span className="text-[10px] font-mono uppercase text-sky-400 block font-bold">
+                    Stat Card #4
+                  </span>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Value</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.codeLinesCount || '500k+'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            codeLinesCount: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white font-mono font-bold outline-none focus:border-sky-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-slate-500">Label</label>
+                    <input
+                      type="text"
+                      value={data.workspaceDashboard?.codeLinesLabel || 'Lines Written'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            codeLinesLabel: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-slate-300 outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. CURRENTLY BUILDING WIDGET (RIGHT COLUMN OF IMAGE) */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-amber-500" />
+                  <span>5. Currently Building Engine (Right Card)</span>
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Section Tag / Header Label
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.currentlyBuilding?.badgeLabel || 'CURRENTLY BUILDING'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          currentlyBuilding: {
+                            ...data.workspaceDashboard.currentlyBuilding,
+                            badgeLabel: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Status Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.currentlyBuilding?.statusText || 'Active Production Release'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          currentlyBuilding: {
+                            ...data.workspaceDashboard.currentlyBuilding,
+                            statusText: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Project Title
+                </label>
+                <input
+                  type="text"
+                  value={data.workspaceDashboard?.currentlyBuilding?.title || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: {
+                        ...data.workspaceDashboard,
+                        currentlyBuilding: {
+                          ...data.workspaceDashboard.currentlyBuilding,
+                          title: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Project Description / Subtitle
+                </label>
+                <textarea
+                  rows={3}
+                  value={data.workspaceDashboard?.currentlyBuilding?.subtitle || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: {
+                        ...data.workspaceDashboard,
+                        currentlyBuilding: {
+                          ...data.workspaceDashboard.currentlyBuilding,
+                          subtitle: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Progress Bar Label
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.currentlyBuilding?.progressLabel || 'Milestone Progress'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          currentlyBuilding: {
+                            ...data.workspaceDashboard.currentlyBuilding,
+                            progressLabel: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center">
+                    <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                      Milestone Progress ({data.workspaceDashboard?.currentlyBuilding?.progress ?? 94}%)
+                    </label>
+                  </div>
+                  <div className="mt-2 flex items-center gap-4">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={data.workspaceDashboard?.currentlyBuilding?.progress ?? 94}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            currentlyBuilding: {
+                              ...data.workspaceDashboard.currentlyBuilding,
+                              progress: parseInt(e.target.value, 10) || 0,
+                            },
+                          },
+                        })
+                      }
+                      className="w-full accent-sky-500 cursor-pointer"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={data.workspaceDashboard?.currentlyBuilding?.progress ?? 94}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          workspaceDashboard: {
+                            ...data.workspaceDashboard,
+                            currentlyBuilding: {
+                              ...data.workspaceDashboard.currentlyBuilding,
+                              progress: parseInt(e.target.value, 10) || 0,
+                            },
+                          },
+                        })
+                      }
+                      className="w-16 rounded-xl border border-white/10 bg-[#141824] p-2 text-center text-xs text-white font-mono outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Tech Stack Tags (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={(data.workspaceDashboard?.currentlyBuilding?.tags || []).join(', ')}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      workspaceDashboard: {
+                        ...data.workspaceDashboard,
+                        currentlyBuilding: {
+                          ...data.workspaceDashboard.currentlyBuilding,
+                          tags: e.target.value
+                            .split(',')
+                            .map((t) => t.trim())
+                            .filter(Boolean),
+                        },
+                      },
+                    })
+                  }
+                  placeholder="Next.js 14, TypeScript, Tailwind CSS, Framer Motion, Supabase"
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 pt-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    CTA Button Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.currentlyBuilding?.ctaText || 'Collaborate On A Build'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          currentlyBuilding: {
+                            ...data.workspaceDashboard.currentlyBuilding,
+                            ctaText: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    CTA Button Link
+                  </label>
+                  <input
+                    type="text"
+                    value={data.workspaceDashboard?.currentlyBuilding?.ctaLink || '/contact'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        workspaceDashboard: {
+                          ...data.workspaceDashboard,
+                          currentlyBuilding: {
+                            ...data.workspaceDashboard.currentlyBuilding,
+                            ctaLink: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save Bar */}
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  saveContentChanges({
+                    workspaceDashboard: data.workspaceDashboard,
+                  })
+                }
+                className="flex items-center gap-2 rounded-xl bg-sky-500 px-8 py-3.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                <span>{saving ? 'Saving to Database...' : 'Save Workspace Cockpit to Database'}</span>
+              </button>
             </div>
           </div>
         )}
@@ -3098,6 +3978,559 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                   No inquiries found matching current filter &quot;{requestFilter}&quot;.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: CONTACT SECTION & INQUIRIES CMS */}
+        {activeTab === 'contact' && (
+          <div className="p-8 max-w-5xl space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </span>
+                  <h2 className="text-2xl font-bold tracking-tight text-white">
+                    Contact Section & Inquiries CMS
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Manage contact page headings, guarantee badges, direct Discord and Email channels, form dropdown tiers, and confirmation messaging.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  saveContentChanges({
+                    contactContent: data.contactContent,
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                <span>{saving ? 'Writing Changes...' : 'Save Contact Section'}</span>
+              </button>
+            </div>
+
+            {/* 1. HEADER & INTRO */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>1. Contact Heading & Intro</span>
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Badge Pill Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.badge || 'START A PROJECT'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          badge: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Main Title
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.title || "Let's Build Something"}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          title: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Description Paragraph
+                </label>
+                <textarea
+                  rows={3}
+                  value={data.contactContent?.description || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        description: e.target.value,
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Response Time Badge / Notice
+                </label>
+                <input
+                  type="text"
+                  value={data.contactContent?.responseTimeText || 'Replies typically within 24 hours'}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        responseTimeText: e.target.value,
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+            </div>
+
+            {/* 2. GUARANTEES & VALUE CARDS */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>2. Value Proposition & Guarantee Cards</span>
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newG: ContactGuarantee = {
+                      id: 'g-' + Date.now(),
+                      title: 'Guaranteed Scope',
+                      description: 'Milestone-based delivery with regular progress updates and test builds.',
+                      icon: 'CheckCircle2',
+                    };
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        guarantees: [...(data.contactContent?.guarantees || []), newG],
+                      },
+                    });
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500/10 px-3 py-1.5 text-xs font-semibold text-sky-400 hover:bg-sky-500 hover:text-white transition"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add Guarantee Card</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(data.contactContent?.guarantees || []).map((g, idx) => (
+                  <div
+                    key={g.id || idx}
+                    className="rounded-2xl border border-white/5 bg-[#141824] p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                        Card #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setData({
+                            ...data,
+                            contactContent: {
+                              ...(data.contactContent || ({} as any)),
+                              guarantees: (data.contactContent?.guarantees || []).filter(
+                                (_, i) => i !== idx
+                              ),
+                            },
+                          });
+                        }}
+                        className="text-red-400 hover:text-red-300 p-1 rounded-lg hover:bg-red-500/10 transition"
+                        title="Remove Card"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-mono uppercase text-slate-500">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={g.title}
+                          onChange={(e) => {
+                            const updated = [...(data.contactContent?.guarantees || [])];
+                            updated[idx] = { ...updated[idx], title: e.target.value };
+                            setData({
+                              ...data,
+                              contactContent: {
+                                ...(data.contactContent || ({} as any)),
+                                guarantees: updated,
+                              },
+                            });
+                          }}
+                          className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-mono uppercase text-slate-500">
+                          Icon
+                        </label>
+                        <select
+                          value={g.icon || 'CheckCircle2'}
+                          onChange={(e) => {
+                            const updated = [...(data.contactContent?.guarantees || [])];
+                            updated[idx] = { ...updated[idx], icon: e.target.value };
+                            setData({
+                              ...data,
+                              contactContent: {
+                                ...(data.contactContent || ({} as any)),
+                                guarantees: updated,
+                              },
+                            });
+                          }}
+                          className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                        >
+                          <option value="CheckCircle2">CheckCircle2</option>
+                          <option value="Terminal">Terminal</option>
+                          <option value="ShieldCheck">ShieldCheck</option>
+                          <option value="Clock">Clock</option>
+                          <option value="Zap">Zap</option>
+                          <option value="Sparkles">Sparkles</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-500">
+                        Description
+                      </label>
+                      <input
+                        type="text"
+                        value={g.description}
+                        onChange={(e) => {
+                          const updated = [...(data.contactContent?.guarantees || [])];
+                          updated[idx] = { ...updated[idx], description: e.target.value };
+                          setData({
+                            ...data,
+                            contactContent: {
+                              ...(data.contactContent || ({} as any)),
+                              guarantees: updated,
+                            },
+                          });
+                        }}
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-[#1b2030] p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. DIRECT CHANNELS (DISCORD & EMAIL) */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>3. Direct Communication Channels</span>
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Direct Email
+                </label>
+                <input
+                  type="email"
+                  value={data.contactContent?.directEmail || data.siteSettings.email || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        directEmail: e.target.value,
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-5 space-y-4">
+                <div className="font-mono text-xs font-bold text-sky-400 uppercase">
+                  Discord Callout Box
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                      Box Title
+                    </label>
+                    <input
+                      type="text"
+                      value={data.contactContent?.directDiscordTitle || 'Direct Discord Communication'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          contactContent: {
+                            ...(data.contactContent || ({} as any)),
+                            directDiscordTitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                      Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={data.contactContent?.directDiscordButtonText || 'Join Discord'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          contactContent: {
+                            ...(data.contactContent || ({} as any)),
+                            directDiscordButtonText: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Box Description
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.directDiscordDesc || 'Prefer instant chat over a form? Join the server or DM directly:'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          directDiscordDesc: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                      Discord Handle / Username
+                    </label>
+                    <input
+                      type="text"
+                      value={data.contactContent?.directDiscordUsername || 'aurex.studio'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          contactContent: {
+                            ...(data.contactContent || ({} as any)),
+                            directDiscordUsername: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                      Discord Server / Invite URL
+                    </label>
+                    <input
+                      type="text"
+                      value={data.contactContent?.directDiscordUrl || 'https://discord.gg/aurex'}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          contactContent: {
+                            ...(data.contactContent || ({} as any)),
+                            directDiscordUrl: e.target.value,
+                          },
+                        })
+                      }
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. FORM OPTIONS & DROPDOWNS */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Sliders className="h-4 w-4" />
+                  <span>4. Inquiry Form Dropdown Options</span>
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Project Types / Services Options (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={(data.contactContent?.servicesList || []).join(', ')}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        servicesList: e.target.value
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Budget Tiers Options (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={(data.contactContent?.budgetTiers || []).join(', ')}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        budgetTiers: e.target.value
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Timeline Options (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={(data.contactContent?.timelineOptions || []).join(', ')}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        timelineOptions: e.target.value
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+            </div>
+
+            {/* 5. SUCCESS CONFIRMATION COPY */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-bold text-sky-400 font-mono uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>5. Form Submission Success Screen</span>
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Success Heading
+                </label>
+                <input
+                  type="text"
+                  value={data.contactContent?.formSuccessTitle || 'Inquiry Received!'}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        formSuccessTitle: e.target.value,
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Success Description Message
+                </label>
+                <textarea
+                  rows={2}
+                  value={data.contactContent?.formSuccessMessage || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        formSuccessMessage: e.target.value,
+                      },
+                    })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Save Bar */}
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  saveContentChanges({
+                    contactContent: data.contactContent,
+                  })
+                }
+                className="flex items-center gap-2 rounded-xl bg-sky-500 px-8 py-3.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                <span>{saving ? 'Saving to Database...' : 'Save Contact Section to Database'}</span>
+              </button>
             </div>
           </div>
         )}

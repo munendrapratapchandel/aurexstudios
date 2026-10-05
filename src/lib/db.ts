@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { DatabaseSchema, FeedbackItem, ContactRequest, Service, Project, FaqItem, MediaItem } from '@/types';
-import { initialDatabaseData } from './seed-data';
+import { DatabaseSchema, FeedbackItem, ContactRequest, Service, Project, FaqItem, MediaItem, ContactContent } from '@/types';
+import { initialDatabaseData, defaultContactContent } from './seed-data';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -101,6 +101,11 @@ export function getHeroContent() {
 
 export function getWorkspaceDashboard() {
   return getDatabase().workspaceDashboard;
+}
+
+export function getContactContent(): ContactContent {
+  const db = getDatabase();
+  return db.contactContent || defaultContactContent;
 }
 
 export function getSocialLinks() {

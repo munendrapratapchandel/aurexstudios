@@ -1,6 +1,6 @@
 {
-  "version": 108,
-  "updatedAt": "2026-10-05T13:04:13.698Z",
+  "version": 122,
+  "updatedAt": "2026-10-05T13:28:46.912Z",
   "siteSettings": {
     "siteName": "Aurex Studio",
     "tagline": "Development · Design · Digital Experiences",
@@ -34,11 +34,29 @@
     "statsBadgeText": "Visitors"
   },
   "workspaceDashboard": {
+    "terminalPrompt": "aurex@workspace:~$",
+    "tabLabels": {
+      "about": "About",
+      "works": "Works Spotlight",
+      "hobbies": "Hobbies",
+      "skills": "Experience & Stack",
+      "socials": "Socials"
+    },
+    "aboutTitle": "About Aurex Studio",
+    "philosophyBadge": "CORE ENGINEERING PHILOSOPHY",
+    "experienceLabel": "Experience",
+    "completedProjectsLabel": "Builds Shipped",
+    "happyClientsLabel": "Global Clients",
+    "codeLinesLabel": "Lines Written",
     "title": "Explore Aurex Studio Workspace",
     "badge": "AUREX STUDIO WORKSPACE",
     "aboutBio": "Aurex Studio is an elite digital engineering and development workspace founded by Professorx, specializing in high-performance web platforms, custom Minecraft network ecosystems, and advanced Discord systems. Every project is crafted with obsessive attention to speed, scalability, and futuristic aesthetic polish.",
     "developerPhilosophy": "Show proof first, engineer for performance, and maintain uncompromising attention to detail across every touchpoint.",
     "currentlyBuilding": {
+      "badgeLabel": "CURRENTLY BUILDING",
+      "progressLabel": "Milestone Progress",
+      "ctaText": "Collaborate On A Build",
+      "ctaLink": "/contact",
       "title": "Aurex Studio v2 — Next-Gen Platform",
       "subtitle": "Interactive digital flagship featuring high-performance micro-interactions, real-time telemetry, and dynamic database-backed CMS engine.",
       "tags": [
@@ -1150,18 +1168,18 @@
     "thisMonthVisitors": 1285,
     "activeVisitors": 1,
     "pageViews": {
-      "/": 1323,
-      "/works": 731,
-      "/services": 613,
+      "/": 1328,
+      "/works": 732,
+      "/services": 614,
       "/services/web-development": 283,
       "/services/minecraft-development": 144,
       "/services/discord-development": 88,
       "/services/discord-bots": 94,
       "/faq": 168,
-      "/contact": 224,
+      "/contact": 230,
       "/works/aurex-studio": 2,
       "/works/vortex-sentinel-bot": 1,
-      "/dashboard": 4,
+      "/dashboard": 5,
       "/dashboard/developers/kaelen": 1
     },
     "serviceInterest": {
@@ -1170,7 +1188,7 @@
       "Minecraft Development": 39,
       "Discord Development": 24
     },
-    "lastUpdated": "2026-10-05T12:35:29.572Z"
+    "lastUpdated": "2026-10-05T13:28:46.912Z"
   },
   "sessions": [
     {
@@ -1182,7 +1200,7 @@
     {
       "sessionId": "sess_5931b465ef02a6d463bedd2c842e1a73",
       "ipHash": "837ec5754f50",
-      "lastSeen": 1791203729572,
+      "lastSeen": 1791206926912,
       "createdAt": 1791189531347
     }
   ],
@@ -1485,5 +1503,54 @@
       "createdAt": "2026-10-01T00:00:00.000Z",
       "updatedAt": "2026-10-05T00:00:00.000Z"
     }
-  ]
+  ],
+  "contactContent": {
+    "badge": "START A PROJECT",
+    "title": "Let's Build Something",
+    "description": "Submit your project goals, scope, and timeline below. Every inquiry is personally reviewed by the Aurex Studio team with a prompt architectural response within 24 hours.",
+    "responseTimeText": "Replies typically within 24 hours",
+    "guarantees": [
+      {
+        "id": "g-1",
+        "title": "Clear Scope & Fixed Pricing",
+        "description": "No surprise fees. You receive a structured milestone outline before work starts.",
+        "icon": "CheckCircle2"
+      },
+      {
+        "id": "g-2",
+        "title": "Full Source Code & Admin Handover",
+        "description": "You own 100% of your assets, repos, and administrative dashboards.",
+        "icon": "Terminal"
+      }
+    ],
+    "directEmail": "contact@aurex.studio",
+    "directDiscordTitle": "Direct Discord Communication",
+    "directDiscordDesc": "Prefer instant chat over a form? Join the server or DM directly:",
+    "directDiscordUsername": "aurex.studio",
+    "directDiscordUrl": "https://discord.gg/aurex",
+    "directDiscordButtonText": "Join Discord",
+    "servicesList": [
+      "Web Development",
+      "Minecraft Development",
+      "Discord Development",
+      "Discord Bot Development",
+      "Custom Platform",
+      "UI / UX & Texture Design"
+    ],
+    "budgetTiers": [
+      "< ₹10,000",
+      "₹10,000 – ₹25,000",
+      "₹25,000 – ₹50,000",
+      "₹50,000+",
+      "Flexible Scope"
+    ],
+    "timelineOptions": [
+      "Urgent (< 1 Week)",
+      "2–3 Weeks",
+      "1 Month",
+      "Flexible Timeline"
+    ],
+    "formSuccessTitle": "Inquiry Received!",
+    "formSuccessMessage": "Thank you for reaching out. We will review your project scope and get back to you with an architectural proposal within 24 hours."
+  }
 }

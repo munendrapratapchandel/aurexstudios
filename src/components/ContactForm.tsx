@@ -5,24 +5,18 @@ import { motion } from 'framer-motion';
 import { Send, CheckCircle2, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { ContactContent } from '@/types';
+
 interface ContactFormProps {
   initialService?: string;
+  content?: ContactContent;
 }
 
-export function ContactForm({ initialService }: ContactFormProps) {
+export function ContactForm({ initialService, content }: ContactFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [handle, setHandle] = useState('');
-  const [selectedService, setSelectedService] = useState(initialService || 'Web Development');
-  const [budget, setBudget] = useState('₹15,000 – ₹35,000');
-  const [timeline, setTimeline] = useState('2–3 Weeks');
-  const [message, setMessage] = useState('');
-
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const servicesList = [
+  const servicesList = content?.servicesList?.length ? content.servicesList : [
     'Web Development',
     'Minecraft Development',
     'Discord Development',
@@ -30,7 +24,7 @@ export function ContactForm({ initialService }: ContactFormProps) {
     'Custom Platform',
   ];
 
-  const budgetTiers = [
+  const budgetTiers = content?.budgetTiers?.length ? content.budgetTiers : [
     '< ₹10,000',
     '₹10,000 – ₹25,000',
     '₹25,000 – ₹50,000',
@@ -38,12 +32,21 @@ export function ContactForm({ initialService }: ContactFormProps) {
     'Flexible Scope',
   ];
 
-  const timelineOptions = [
+  const timelineOptions = content?.timelineOptions?.length ? content.timelineOptions : [
     'Urgent (< 1 Week)',
     '2–3 Weeks',
     '1 Month',
     'Flexible Timeline',
   ];
+
+  const [selectedService, setSelectedService] = useState(initialService || servicesList[0] || 'Web Development');
+  const [budget, setBudget] = useState(budgetTiers[0] || '₹15,000 – ₹35,000');
+  const [timeline, setTimeline] = useState(timelineOptions[1] || '2–3 Weeks');
+  const [message, setMessage] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +102,10 @@ export function ContactForm({ initialService }: ContactFormProps) {
           <CheckCircle2 className="h-10 w-10" />
         </div>
         <h3 className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">
-          Inquiry Successfully Sent!
+          {content?.formSuccessTitle || 'Inquiry Successfully Sent!'}
         </h3>
         <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
-          Thank you for reaching out. Professorx will personally review your project scope and follow up via email or Discord within 24 hours.
+          {content?.formSuccessMessage || 'Thank you for reaching out. The team will personally review your project scope and follow up within 24 hours.'}
         </p>
         <button
           onClick={() => {

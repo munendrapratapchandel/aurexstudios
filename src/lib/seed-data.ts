@@ -1,4 +1,54 @@
-import { DatabaseSchema } from '@/types';
+import { DatabaseSchema, ContactContent } from '@/types';
+
+export const defaultContactContent: ContactContent = {
+  badge: 'START A PROJECT',
+  title: "Let's Build Something",
+  description: 'Submit your project goals, scope, and timeline below. Every inquiry is personally reviewed by the Aurex Studio team with a prompt architectural response within 24 hours.',
+  responseTimeText: 'Replies typically within 24 hours',
+  guarantees: [
+    {
+      id: 'g-1',
+      title: 'Clear Scope & Fixed Pricing',
+      description: 'No surprise fees. You receive a structured milestone outline before work starts.',
+      icon: 'CheckCircle2',
+    },
+    {
+      id: 'g-2',
+      title: 'Full Source Code & Admin Handover',
+      description: 'You own 100% of your assets, repos, and administrative dashboards.',
+      icon: 'Terminal',
+    },
+  ],
+  directEmail: 'contact@aurex.studio',
+  directDiscordTitle: 'Direct Discord Communication',
+  directDiscordDesc: 'Prefer instant chat over a form? Join the server or DM directly:',
+  directDiscordUsername: 'aurex.studio',
+  directDiscordUrl: 'https://discord.gg/aurex',
+  directDiscordButtonText: 'Join Discord',
+  servicesList: [
+    'Web Development',
+    'Minecraft Development',
+    'Discord Development',
+    'Discord Bot Development',
+    'Custom Platform',
+    'UI / UX & Texture Design',
+  ],
+  budgetTiers: [
+    '< ₹10,000',
+    '₹10,000 – ₹25,000',
+    '₹25,000 – ₹50,000',
+    '₹50,000+',
+    'Flexible Scope',
+  ],
+  timelineOptions: [
+    'Urgent (< 1 Week)',
+    '2–3 Weeks',
+    '1 Month',
+    'Flexible Timeline',
+  ],
+  formSuccessTitle: 'Inquiry Received!',
+  formSuccessMessage: 'Thank you for reaching out. We will review your project scope and get back to you with an architectural proposal within 24 hours.',
+};
 
 export const initialDatabaseData: DatabaseSchema = {
   version: 1,
@@ -38,7 +88,18 @@ export const initialDatabaseData: DatabaseSchema = {
   workspaceDashboard: {
     title: 'Explore Aurex Studio Workspace',
     badge: 'AUREX STUDIO WORKSPACE',
+    subtitle: 'An interactive look inside my engineering discipline, active build pipelines, selected hobbies, and ecosystem.',
+    terminalPrompt: 'aurex@workspace:~$',
+    tabLabels: {
+      about: 'About',
+      works: 'Works Spotlight',
+      hobbies: 'Hobbies',
+      skills: 'Experience & Stack',
+      socials: 'Socials',
+    },
+    aboutTitle: 'About Aurex Studio',
     aboutBio: 'Aurex Studio is an elite digital engineering and development workspace founded by Professorx, specializing in high-performance web platforms, custom Minecraft network ecosystems, and advanced Discord systems. Every project is crafted with obsessive attention to speed, scalability, and futuristic aesthetic polish.',
+    philosophyBadge: 'CORE ENGINEERING PHILOSOPHY',
     developerPhilosophy: 'Show proof first, engineer for performance, and maintain uncompromising attention to detail across every touchpoint.',
     currentlyBuilding: {
       title: 'Aurex Studio v2 — Next-Gen Platform',
@@ -47,13 +108,22 @@ export const initialDatabaseData: DatabaseSchema = {
       progress: 94,
       statusText: 'Active Production Release',
       link: '/works/aurex-studio',
+      badgeLabel: 'CURRENTLY BUILDING',
+      progressLabel: 'Milestone Progress',
+      ctaText: 'Collaborate On A Build',
+      ctaLink: '/contact',
     },
     experienceYears: '6+ Years',
     completedProjectsCount: '85+',
     happyClientsCount: '60+',
     codeLinesCount: '500k+',
+    experienceLabel: 'Experience',
+    completedProjectsLabel: 'Builds Shipped',
+    happyClientsLabel: 'Global Clients',
+    codeLinesLabel: 'Lines Written',
     mediaUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
   },
+  contactContent: defaultContactContent,
   socialLinks: [
     {
       id: 'soc-1',

@@ -118,18 +118,18 @@ export function WorkspaceDashboard({
                 <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
               <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-                aurex@workspace:~$
+                {dashboard.terminalPrompt || 'aurex@workspace:~$'}
               </span>
             </div>
 
             {/* Navigation tabs inside the interactive dashboard */}
             <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-0">
               {[
-                { id: 'about', label: 'About', icon: User },
-                { id: 'works', label: 'Works Spotlight', icon: FolderGit2 },
-                { id: 'hobbies', label: 'Hobbies', icon: Heart },
-                { id: 'skills', label: 'Experience & Stack', icon: Cpu },
-                { id: 'socials', label: 'Socials', icon: Share2 },
+                { id: 'about', label: dashboard.tabLabels?.about || 'About', icon: User },
+                { id: 'works', label: dashboard.tabLabels?.works || 'Works Spotlight', icon: FolderGit2 },
+                { id: 'hobbies', label: dashboard.tabLabels?.hobbies || 'Hobbies', icon: Heart },
+                { id: 'skills', label: dashboard.tabLabels?.skills || 'Experience & Stack', icon: Cpu },
+                { id: 'socials', label: dashboard.tabLabels?.socials || 'Socials', icon: Share2 },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -167,7 +167,7 @@ export function WorkspaceDashboard({
                   <div className="space-y-6 lg:col-span-2">
                     <div>
                       <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        About Aurex Studio
+                        {dashboard.aboutTitle || 'About Aurex Studio'}
                       </h3>
                       <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
                         {dashboard.aboutBio}
@@ -177,7 +177,7 @@ export function WorkspaceDashboard({
                     <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-5">
                       <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-sky-500 dark:text-sky-400">
                         <Sparkles className="h-4 w-4" />
-                        <span>Core Engineering Philosophy</span>
+                        <span>{dashboard.philosophyBadge || 'Core Engineering Philosophy'}</span>
                       </div>
                       <p className="mt-2 text-sm italic leading-relaxed text-slate-700 dark:text-slate-300">
                         &quot;{dashboard.developerPhilosophy}&quot;
@@ -190,25 +190,33 @@ export function WorkspaceDashboard({
                         <div className="font-mono text-2xl font-bold text-sky-500">
                           {dashboard.experienceYears || '6+ Years'}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">Experience</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {dashboard.experienceLabel || 'Experience'}
+                        </div>
                       </div>
                       <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-center dark:border-white/5 dark:bg-[#11141e]">
                         <div className="font-mono text-2xl font-bold text-sky-500">
                           {dashboard.completedProjectsCount || '85+'}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">Builds Shipped</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {dashboard.completedProjectsLabel || 'Builds Shipped'}
+                        </div>
                       </div>
                       <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-center dark:border-white/5 dark:bg-[#11141e]">
                         <div className="font-mono text-2xl font-bold text-sky-500">
                           {dashboard.happyClientsCount || '60+'}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">Global Clients</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {dashboard.happyClientsLabel || 'Global Clients'}
+                        </div>
                       </div>
                       <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-center dark:border-white/5 dark:bg-[#11141e]">
                         <div className="font-mono text-2xl font-bold text-sky-500">
                           {dashboard.codeLinesCount || '500k+'}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">Lines Written</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {dashboard.codeLinesLabel || 'Lines Written'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -219,31 +227,31 @@ export function WorkspaceDashboard({
                       <div className="flex items-center gap-2">
                         <Flame className="h-4 w-4 text-amber-500" />
                         <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
-                          Currently Building
+                          {dashboard.currentlyBuilding?.badgeLabel || 'Currently Building'}
                         </span>
                       </div>
                       <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-500">
-                        {dashboard.currentlyBuilding.statusText || 'Active Alpha'}
+                        {dashboard.currentlyBuilding?.statusText || 'Active Alpha'}
                       </span>
                     </div>
 
                     <h4 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
-                      {dashboard.currentlyBuilding.title}
+                      {dashboard.currentlyBuilding?.title}
                     </h4>
                     <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                      {dashboard.currentlyBuilding.subtitle}
+                      {dashboard.currentlyBuilding?.subtitle}
                     </p>
 
                     {/* Progress Bar */}
                     <div className="mt-5">
                       <div className="flex justify-between text-xs font-medium text-slate-500">
-                        <span>Milestone Progress</span>
-                        <span>{dashboard.currentlyBuilding.progress}%</span>
+                        <span>{dashboard.currentlyBuilding?.progressLabel || 'Milestone Progress'}</span>
+                        <span>{dashboard.currentlyBuilding?.progress ?? 90}%</span>
                       </div>
                       <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${dashboard.currentlyBuilding.progress}%` }}
+                          animate={{ width: `${dashboard.currentlyBuilding?.progress ?? 90}%` }}
                           transition={{ duration: 1 }}
                           className="h-full bg-gradient-to-r from-sky-500 to-indigo-500"
                         />
@@ -252,7 +260,7 @@ export function WorkspaceDashboard({
 
                     {/* Tags */}
                     <div className="mt-5 flex flex-wrap gap-1.5">
-                      {dashboard.currentlyBuilding.tags.map((tag) => (
+                      {(dashboard.currentlyBuilding?.tags || []).map((tag) => (
                         <span
                           key={tag}
                           className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-mono text-[11px] text-slate-700 shadow-sm dark:border-white/5 dark:bg-[#151926] dark:text-slate-300"
@@ -264,10 +272,10 @@ export function WorkspaceDashboard({
 
                     <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10">
                       <Link
-                        href="/contact"
+                        href={dashboard.currentlyBuilding?.ctaLink || '/contact'}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-2.5 text-xs font-semibold text-white transition hover:bg-sky-400"
                       >
-                        <span>Collaborate On A Build</span>
+                        <span>{dashboard.currentlyBuilding?.ctaText || 'Collaborate On A Build'}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>

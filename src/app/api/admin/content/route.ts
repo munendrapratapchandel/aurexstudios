@@ -17,6 +17,7 @@ export async function GET() {
       siteSettings: db.siteSettings,
       heroContent: db.heroContent,
       workspaceDashboard: db.workspaceDashboard,
+      contactContent: db.contactContent,
       socialLinks: db.socialLinks,
       hobbies: db.hobbies,
       skillCategories: db.skillCategories,
@@ -45,6 +46,9 @@ export async function PUT(req: NextRequest) {
       }
       if (payload.workspaceDashboard) {
         db.workspaceDashboard = { ...db.workspaceDashboard, ...payload.workspaceDashboard };
+      }
+      if (payload.contactContent) {
+        db.contactContent = { ...(db.contactContent || {}), ...payload.contactContent };
       }
       if (Array.isArray(payload.socialLinks)) {
         db.socialLinks = payload.socialLinks;
