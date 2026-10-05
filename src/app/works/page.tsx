@@ -1,5 +1,5 @@
 import React from 'react';
-import { getProjects, getSiteSettings, getSocialLinks } from '@/lib/db';
+import { getProjects, getSiteSettings, getSocialLinks, initDatabase } from '@/lib/db';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { VisitorTracker } from '@/components/VisitorTracker';
@@ -9,7 +9,8 @@ import { FolderGit2 } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function WorksPage() {
+export default async function WorksPage() {
+  await initDatabase();
   const projects = getProjects();
   const settings = getSiteSettings();
   const socials = getSocialLinks();

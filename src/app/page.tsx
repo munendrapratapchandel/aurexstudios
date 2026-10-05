@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  initDatabase,
   getHeroContent,
   getSiteSettings,
   getWorkspaceDashboard,
@@ -27,7 +28,8 @@ import { VisitorTracker } from '@/components/VisitorTracker';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function HomePage() {
+export default async function HomePage() {
+  await initDatabase();
   const hero = getHeroContent();
   const settings = getSiteSettings();
   const dashboard = getWorkspaceDashboard();

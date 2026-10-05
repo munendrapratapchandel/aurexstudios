@@ -1,20 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { DatabaseSchema, FeedbackItem, ContactRequest, Service, Project, FaqItem, MediaItem, ContactContent } from '@/types';
 import { initialDatabaseData, defaultContactContent } from './seed-data';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
-const REVISIONS_DIR = path.join(DATA_DIR, 'revisions');
+const REVISIONS_DIR = path.join(os.tmpdir(), 'revisions');
+const TMP_DB_FILE = path.join(os.tmpdir(), 'aurex_studio_db.json');
 
 function ensureDirectories() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-  } catch {
-    // Read-only serverless environment (e.g. Vercel)
-  }
   try {
     if (!fs.existsSync(REVISIONS_DIR)) {
       fs.mkdirSync(REVISIONS_DIR, { recursive: true });
@@ -26,50 +21,72 @@ function ensureDirectories() {
 
 // In-memory cache with disk mtime synchronization
 let memoryDb: DatabaseSchema | null = null;
-let lastDbMtime: number = 0;
+let lastSupabaseFetchTime: number = 0;
+const CACHE_TTL_MS = 2500; // 2.5s debounce to reuse state during a single page render tree
 
 export function getDatabase(): DatabaseSchema {
-  ensureDirectories();
+  if (memoryDb) {
+    return memoryDb;
+  }
 
+  // 1. Check /tmp first (persists across same-container runs on Vercel)
   try {
-    if (!fs.existsSync(DB_FILE)) {
-      try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(initialDatabaseData, null, 2), 'utf-8');
-      } catch {
-        // Read-only filesystem, cannot write seed to disk
-      }
-      if (!memoryDb) {
-        memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
-      }
+    if (fs.existsSync(TMP_DB_FILE)) {
+      const raw = fs.readFileSync(TMP_DB_FILE, 'utf-8');
+      memoryDb = JSON.parse(raw);
       return memoryDb!;
     }
-
-    try {
-      const stat = fs.statSync(DB_FILE);
-      if (memoryDb && stat.mtimeMs === lastDbMtime) {
-        return memoryDb;
-      }
-      lastDbMtime = stat.mtimeMs;
-    } catch {
-      // ignore stat error in restricted environments
-    }
-
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    memoryDb = parsed;
-    return parsed;
-  } catch (err) {
-    if (memoryDb) return memoryDb;
-    memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
-    return memoryDb!;
+  } catch {
+    // ignore
   }
+
+  // 2. Check bundled DB_FILE
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      memoryDb = JSON.parse(raw);
+      return memoryDb!;
+    }
+  } catch {
+    // ignore
+  }
+
+  memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
+  return memoryDb!;
+}
+
+// Async database initializer: pulls live master state from Supabase Cloud if configured
+export async function initDatabase(force = false): Promise<DatabaseSchema> {
+  // Return cached memoryDb if fetched recently and not forced
+  if (!force && memoryDb && Date.now() - lastSupabaseFetchTime < CACHE_TTL_MS) {
+    return memoryDb;
+  }
+
+  try {
+    const { isSupabaseConfigured, pullStateFromSupabase } = require('./supabase');
+    if (isSupabaseConfigured()) {
+      const res = await pullStateFromSupabase();
+      if (res.success && res.data) {
+        memoryDb = res.data;
+        lastSupabaseFetchTime = Date.now();
+        try {
+          fs.writeFileSync(TMP_DB_FILE, JSON.stringify(res.data, null, 2), 'utf-8');
+        } catch {}
+        return memoryDb!;
+      }
+    }
+  } catch (err) {
+    console.warn('initDatabase cloud sync notice:', err);
+  }
+
+  return getDatabase();
 }
 
 export function updateDatabase(updater: (db: DatabaseSchema) => void): DatabaseSchema {
   ensureDirectories();
   const db = getDatabase();
 
-  // Create backup revision before applying change (safe on read-only environments)
+  // Create backup revision before applying change (safe in os.tmpdir)
   try {
     if (fs.existsSync(REVISIONS_DIR)) {
       const currentVersion = db.version || 1;
@@ -98,34 +115,45 @@ export function updateDatabase(updater: (db: DatabaseSchema) => void): DatabaseS
   updater(db);
   db.version = (db.version || 1) + 1;
   db.updatedAt = new Date().toISOString();
+  lastSupabaseFetchTime = Date.now();
 
-  // Atomic write via temp file (safe on read-only environments)
+  // Always write to /tmp (guaranteed writable on Vercel and serverless)
+  try {
+    fs.writeFileSync(TMP_DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+  } catch {
+    // ignore
+  }
+
+  // Write to DB_FILE if filesystem is writable (local dev)
   try {
     const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
     fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), 'utf-8');
     fs.renameSync(tempFile, DB_FILE);
   } catch {
-    // Read-only disk on Vercel: safely maintained in memoryDb & Supabase
+    // Read-only disk on Vercel: safely maintained in memoryDb & /tmp & Supabase
   }
 
   memoryDb = db;
+  return db;
+}
 
+// Asynchronously updates database AND awaits cloud persistence in Supabase
+export async function updateDatabaseAsync(updater: (db: DatabaseSchema) => void): Promise<DatabaseSchema> {
+  const db = updateDatabase(updater);
 
-  // Background auto-sync to Supabase if configured and enabled
+  // Await push to Supabase so serverless function does not terminate before sync completes
   try {
-    const { getSupabaseCredentials, pushFullStateToSupabase } = require('./supabase');
-    const creds = getSupabaseCredentials();
-    if (creds.isConfigured && db.supabaseConfig?.autoSync !== false) {
-      pushFullStateToSupabase(db).catch((err: any) => {
-        console.warn('Background Supabase auto-sync notice:', err?.message || err);
-      });
+    const { isSupabaseConfigured, pushFullStateToSupabase } = require('./supabase');
+    if (isSupabaseConfigured() && db.supabaseConfig?.autoSync !== false) {
+      await pushFullStateToSupabase(db);
     }
-  } catch {
-    // Non-blocking
+  } catch (syncErr) {
+    console.warn('Supabase update sync notice:', syncErr);
   }
 
   return db;
 }
+
 
 // Helper getters
 export function getSupabaseSettings() {

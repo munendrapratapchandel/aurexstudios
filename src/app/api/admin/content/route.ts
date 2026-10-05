@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({
     success: true,
     data: {
@@ -37,7 +38,7 @@ export async function PUT(req: NextRequest) {
   try {
     const payload = await req.json();
 
-    const updatedDb = updateDatabase((db) => {
+    const updatedDb = await updateDatabaseAsync((db) => {
       if (payload.siteSettings) {
         db.siteSettings = { ...db.siteSettings, ...payload.siteSettings };
       }
@@ -59,7 +60,31 @@ export async function PUT(req: NextRequest) {
       if (Array.isArray(payload.skillCategories)) {
         db.skillCategories = payload.skillCategories;
       }
+      if (Array.isArray(payload.services)) {
+        db.services = payload.services;
+      }
+      if (Array.isArray(payload.projects)) {
+        db.projects = payload.projects;
+      }
+      if (Array.isArray(payload.developers)) {
+        db.developers = payload.developers;
+      }
+      if (Array.isArray(payload.faqs)) {
+        db.faqs = payload.faqs;
+      }
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/');
+      revalidatePath('/services');
+      revalidatePath('/works');
+      revalidatePath('/contact');
+      revalidatePath('/faq');
+      revalidatePath('/dashboard');
+    } catch {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,

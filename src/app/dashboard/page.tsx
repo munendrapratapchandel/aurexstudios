@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  initDatabase,
   getDevelopers,
   getFeaturedDevelopers,
   getProjects,
@@ -15,7 +16,8 @@ import { DashboardClient } from './DashboardClient';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  await initDatabase();
   const developers = getDevelopers(true); // Only visible developers
   const featuredDevelopers = getFeaturedDevelopers();
   const projects = getProjects();

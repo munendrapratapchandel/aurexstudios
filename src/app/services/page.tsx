@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { getServices, getSiteSettings, getSocialLinks } from '@/lib/db';
+import { getServices, getSiteSettings, getSocialLinks, initDatabase } from '@/lib/db';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { VisitorTracker } from '@/components/VisitorTracker';
@@ -9,7 +9,8 @@ import { Globe, Box, MessageSquare, Bot, ArrowRight, CheckCircle2, Sparkles, Lay
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  await initDatabase();
   const services = getServices();
   const settings = getSiteSettings();
   const socials = getSocialLinks();

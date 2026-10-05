@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 import { Service } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({ success: true, services: db.services });
 }
 
@@ -39,10 +40,15 @@ export async function POST(req: NextRequest) {
       order: body.order || 99,
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.services) db.services = [];
       db.services.push(newService);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/services');
+    } catch {}
 
     return NextResponse.json({ success: true, service: newService });
   } catch (error) {
@@ -61,12 +67,17 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Service ID is required' }, { status: 400 });
     }
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       const idx = db.services.findIndex((s) => s.id === updatedService.id);
       if (idx !== -1) {
         db.services[idx] = { ...db.services[idx], ...updatedService };
       }
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/services');
+    } catch {}
 
     return NextResponse.json({ success: true, service: updatedService });
   } catch (error) {
@@ -86,9 +97,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Service ID required' }, { status: 400 });
     }
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       db.services = db.services.filter((s) => s.id !== id);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/services');
+    } catch {}
 
     return NextResponse.json({ success: true, message: 'Service deleted' });
   } catch (error) {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 import { FaqItem } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({ success: true, faqs: db.faqs });
 }
 
@@ -32,10 +33,15 @@ export async function POST(req: NextRequest) {
       order: body.order || 99,
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.faqs) db.faqs = [];
       db.faqs.push(newFaq);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/faq');
+    } catch {}
 
     return NextResponse.json({ success: true, faq: newFaq });
   } catch (error) {
@@ -54,12 +60,17 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'FAQ ID required' }, { status: 400 });
     }
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       const idx = db.faqs.findIndex((f) => f.id === updatedFaq.id);
       if (idx !== -1) {
         db.faqs[idx] = { ...db.faqs[idx], ...updatedFaq };
       }
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/faq');
+    } catch {}
 
     return NextResponse.json({ success: true, faq: updatedFaq });
   } catch (error) {
@@ -77,9 +88,14 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'FAQ ID required' }, { status: 400 });
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       db.faqs = db.faqs.filter((f) => f.id !== id);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/faq');
+    } catch {}
 
     return NextResponse.json({ success: true, message: 'FAQ deleted' });
   } catch (error) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getSiteSettings, getSocialLinks, getContactContent } from '@/lib/db';
+import { getSiteSettings, getSocialLinks, getContactContent, initDatabase } from '@/lib/db';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { VisitorTracker } from '@/components/VisitorTracker';
@@ -18,7 +18,8 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  await initDatabase();
   const settings = getSiteSettings();
   const socials = getSocialLinks();
   const contactContent = getContactContent();

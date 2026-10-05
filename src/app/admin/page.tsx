@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { checkAdminSession } from '@/lib/auth';
-import { getDatabase } from '@/lib/db';
+import { getDatabase, initDatabase } from '@/lib/db';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export default async function AdminPage() {
     redirect('/admin/login');
   }
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
 
   return <AdminDashboard initialData={db} />;
 }

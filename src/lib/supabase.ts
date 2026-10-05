@@ -19,6 +19,8 @@ export interface SupabaseConnectionStatus {
   };
 }
 
+import os from 'os';
+
 // Retrieve credentials from environment variables or local fallback config
 export function getSupabaseCredentials() {
   const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -26,12 +28,16 @@ export function getSupabaseCredentials() {
   const envServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'aurex-media';
 
-  // Also check if stored in data/supabase.json for easy Admin Panel configuration
+  // Check /tmp first (written during runtime on serverless), then data/supabase.json
   let fileConfig: { url?: string; anonKey?: string; serviceRoleKey?: string; bucket?: string } = {};
+  const tmpConfigPath = path.join(os.tmpdir(), 'supabase.json');
+  const bundledConfigPath = path.join(process.cwd(), 'data', 'supabase.json');
+
   try {
-    const configPath = path.join(process.cwd(), 'data', 'supabase.json');
-    if (fs.existsSync(configPath)) {
-      fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (fs.existsSync(tmpConfigPath)) {
+      fileConfig = JSON.parse(fs.readFileSync(tmpConfigPath, 'utf-8'));
+    } else if (fs.existsSync(bundledConfigPath)) {
+      fileConfig = JSON.parse(fs.readFileSync(bundledConfigPath, 'utf-8'));
     }
   } catch (err) {
     // ignore
@@ -279,11 +285,17 @@ export async function pullStateFromSupabase(): Promise<{ success: boolean; data?
   }
 
   try {
-    const { data, error } = await client
+    const fetchPromise = client
       .from('site_data')
       .select('data')
       .eq('key', 'master_state')
       .single();
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase request timed out (3.5s)')), 3500)
+    );
+
+    const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
 
     if (error || !data?.data) {
       return { success: false, message: error ? error.message : 'No master data record found in Supabase' };

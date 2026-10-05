@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateDatabase, getDatabase } from '@/lib/db';
+import { updateDatabaseAsync, getDatabase } from '@/lib/db';
 import { FeedbackItem } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.feedback) db.feedback = [];
       db.feedback.unshift(newItem);
     });
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // Mirror to Supabase feedback table if configured
     try {
       const { pushFeedbackToSupabase } = require('@/lib/supabase');
-      pushFeedbackToSupabase(newItem).catch((e: any) => console.warn('Supabase feedback push warning:', e));
+      await pushFeedbackToSupabase(newItem);
     } catch {
       // Non-blocking
     }

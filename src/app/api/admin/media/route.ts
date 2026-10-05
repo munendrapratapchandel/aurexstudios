@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 import { MediaItem } from '@/types';
+import { revalidatePath } from 'next/cache';
 import fs from 'fs';
 import path from 'path';
 
@@ -10,8 +11,12 @@ export const dynamic = 'force-dynamic';
 const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
 
 function ensureUploadDir() {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+  } catch {
+    // Read-only serverless environment
   }
 }
 
@@ -19,7 +24,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({ success: true, media: db.media });
 }
 
@@ -45,33 +50,47 @@ export async function POST(req: NextRequest) {
     const filename = `${Date.now()}-${cleanName}`;
     const filePath = path.join(UPLOADS_DIR, filename);
 
-    fs.writeFileSync(filePath, buffer);
+    // Attempt local write if disk is writable
+    try {
+      fs.writeFileSync(filePath, buffer);
+    } catch {
+      // Serverless read-only disk
+    }
 
-    // If uploading a favicon, also mirror it to root public/favicon.ico and src/app/favicon.ico
+    // If uploading a favicon, also mirror it to root public/favicon.ico and src/app/favicon.ico (if writable)
     if (file.name.toLowerCase().endsWith('.ico') || category === 'favicon' || file.name.toLowerCase().includes('favicon')) {
       try {
         fs.writeFileSync(path.join(process.cwd(), 'public', 'favicon.ico'), buffer);
         fs.writeFileSync(path.join(process.cwd(), 'src', 'app', 'favicon.ico'), buffer);
-      } catch (e) {
-        console.error('Failed to sync favicon to root:', e);
+      } catch {
+        // Safe bypass in read-only environment
       }
     }
 
     let publicUrl = `/uploads/${filename}`;
 
-    // Upload to Supabase Storage if configured
+    // Upload to Supabase Storage if configured (primary reliable cloud CDN)
     try {
       const { isSupabaseConfigured, uploadMediaToSupabase } = require('@/lib/supabase');
       if (isSupabaseConfigured()) {
-        const storageRes = await uploadMediaToSupabase(buffer, filename, file.type || 'application/octet-stream');
+        const mimeType = file.type || (filename.endsWith('.ico') ? 'image/x-icon' : filename.endsWith('.png') ? 'image/png' : 'application/octet-stream');
+        const storageRes = await uploadMediaToSupabase(buffer, filename, mimeType);
         if (storageRes.success && storageRes.url) {
           publicUrl = storageRes.url;
         }
       }
     } catch (storageErr) {
-      console.warn('Supabase storage upload fallback to local disk:', storageErr);
+      console.warn('Supabase storage upload notice:', storageErr);
     }
 
+    // Fallback: If on serverless where /uploads/ cannot be served and publicUrl is still relative, use Data URI
+    if (publicUrl.startsWith('/uploads/') && buffer.length <= 3 * 1024 * 1024) {
+      const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+      if (isServerless) {
+        const mimeType = file.type || (filename.endsWith('.ico') ? 'image/x-icon' : 'image/png');
+        publicUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      }
+    }
 
     const newMedia: MediaItem = {
       id: 'med-' + Date.now(),
@@ -84,10 +103,14 @@ export async function POST(req: NextRequest) {
       uploadedAt: new Date().toISOString(),
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.media) db.media = [];
       db.media.unshift(newMedia);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+    } catch {}
 
     return NextResponse.json({ success: true, media: newMedia });
   } catch (error) {
@@ -119,9 +142,13 @@ export async function DELETE(req: NextRequest) {
       }
     }
 
-    updateDatabase((database) => {
+    await updateDatabaseAsync((database) => {
       database.media = database.media.filter((m) => m.id !== id);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+    } catch {}
 
     return NextResponse.json({ success: true, message: 'Media item deleted' });
   } catch (error) {

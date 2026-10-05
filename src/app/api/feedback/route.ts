@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getApprovedFeedback } from '@/lib/db';
+import { getApprovedFeedback, initDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await initDatabase();
     const feedback = getApprovedFeedback();
     return NextResponse.json({ success: true, feedback });
   } catch (error) {

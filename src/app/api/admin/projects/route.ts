@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 import { Project } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({ success: true, projects: db.projects });
 }
 
@@ -42,10 +43,15 @@ export async function POST(req: NextRequest) {
       order: body.order || 99,
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.projects) db.projects = [];
       db.projects.push(newProject);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/works');
+    } catch {}
 
     return NextResponse.json({ success: true, project: newProject });
   } catch (error) {
@@ -64,12 +70,17 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Project ID required' }, { status: 400 });
     }
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       const idx = db.projects.findIndex((p) => p.id === updatedProject.id);
       if (idx !== -1) {
         db.projects[idx] = { ...db.projects[idx], ...updatedProject };
       }
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/works');
+    } catch {}
 
     return NextResponse.json({ success: true, project: updatedProject });
   } catch (error) {
@@ -87,9 +98,14 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'Project ID required' }, { status: 400 });
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       db.projects = db.projects.filter((p) => p.id !== id);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/works');
+    } catch {}
 
     return NextResponse.json({ success: true, message: 'Project deleted' });
   } catch (error) {

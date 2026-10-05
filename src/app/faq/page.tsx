@@ -1,5 +1,5 @@
 import React from 'react';
-import { getFaqs, getSiteSettings, getSocialLinks } from '@/lib/db';
+import { getFaqs, getSiteSettings, getSocialLinks, initDatabase } from '@/lib/db';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { VisitorTracker } from '@/components/VisitorTracker';
@@ -9,7 +9,8 @@ import { HelpCircle } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  await initDatabase();
   const faqs = getFaqs();
   const settings = getSiteSettings();
   const socials = getSocialLinks();

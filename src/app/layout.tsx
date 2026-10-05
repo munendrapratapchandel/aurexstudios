@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import { getSiteSettings } from '@/lib/db';
+import { getSiteSettings, initDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +18,7 @@ const geistMono = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+  await initDatabase();
   const settings = getSiteSettings();
   return {
     title: `${settings.siteName} — ${settings.tagline}`,
@@ -33,11 +34,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await initDatabase();
   const settings = getSiteSettings();
   const favicon = settings.faviconUrl || '/favicon.ico';
   const faviconType = favicon.endsWith('.png')

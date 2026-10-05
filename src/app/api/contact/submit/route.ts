@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateDatabase } from '@/lib/db';
+import { updateDatabaseAsync } from '@/lib/db';
 import { ContactRequest } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.contactRequests) db.contactRequests = [];
       db.contactRequests.unshift(newRequest);
     });
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Mirror directly to Supabase inquiries table if configured
     try {
       const { pushInquiryToSupabase } = require('@/lib/supabase');
-      pushInquiryToSupabase(newRequest).catch((e: any) => console.warn('Supabase inquiry push warning:', e));
+      await pushInquiryToSupabase(newRequest);
     } catch {
       // Non-blocking
     }

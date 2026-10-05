@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getVisitorMetrics } from '@/lib/db';
+import { getVisitorMetrics, initDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await initDatabase();
     const metrics = getVisitorMetrics();
     return NextResponse.json({
       success: true,

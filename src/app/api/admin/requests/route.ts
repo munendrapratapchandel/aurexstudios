@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   return NextResponse.json({ success: true, requests: db.contactRequests });
 }
 
@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest) {
     const { id, status, internalNotes } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: 'ID required' }, { status: 400 });
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       const item = db.contactRequests.find((r) => r.id === id);
       if (item) {
         if (status !== undefined) item.status = status;
@@ -44,7 +44,7 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'ID required' }, { status: 400 });
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       db.contactRequests = db.contactRequests.filter((r) => r.id !== id);
     });
 

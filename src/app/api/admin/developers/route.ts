@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase, updateDatabase } from '@/lib/db';
+import { getDatabase, initDatabase, updateDatabaseAsync } from '@/lib/db';
 import { checkAdminSession } from '@/lib/auth';
 import { Developer } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET() {
   const isAuth = await checkAdminSession();
   if (!isAuth) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  const db = getDatabase();
+  const db = await initDatabase(true);
   const developers = (db.developers || []).sort((a, b) => a.displayOrder - b.displayOrder);
   return NextResponse.json({ success: true, developers });
 }
@@ -55,10 +56,15 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
     };
 
-    updateDatabase((d) => {
+    await updateDatabaseAsync((d) => {
       if (!d.developers) d.developers = [];
       d.developers.push(newDeveloper);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/dashboard');
+    } catch {}
 
     return NextResponse.json({ success: true, developer: newDeveloper });
   } catch (error) {
@@ -80,7 +86,7 @@ export async function PUT(req: NextRequest) {
     let updatedDev: Developer | null = null;
     const now = new Date().toISOString();
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.developers) db.developers = [];
       const idx = db.developers.findIndex((d) => d.id === body.id);
       if (idx !== -1) {
@@ -108,6 +114,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Developer not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/dashboard');
+    } catch {}
+
     return NextResponse.json({ success: true, developer: updatedDev });
   } catch (error) {
     console.error('Error updating developer:', error);
@@ -124,10 +135,15 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, error: 'Developer ID required' }, { status: 400 });
 
-    updateDatabase((db) => {
+    await updateDatabaseAsync((db) => {
       if (!db.developers) db.developers = [];
       db.developers = db.developers.filter((d) => d.id !== id);
     });
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/dashboard');
+    } catch {}
 
     return NextResponse.json({ success: true, message: 'Developer deleted' });
   } catch (error) {

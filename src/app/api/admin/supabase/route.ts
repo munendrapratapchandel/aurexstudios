@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminSession } from '@/lib/auth';
-import { getDatabase, updateDatabase, getSupabaseSettings, updateSupabaseSettings } from '@/lib/db';
+import { getDatabase, updateDatabase, updateDatabaseAsync, getSupabaseSettings, updateSupabaseSettings } from '@/lib/db';
 import {
   testSupabaseConnection,
   pushFullStateToSupabase,
@@ -9,6 +9,7 @@ import {
 } from '@/lib/supabase';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +88,13 @@ export async function POST(req: NextRequest) {
       }
 
 
+      try {
+        const tmpConfigPath = path.join(os.tmpdir(), 'supabase.json');
+        fs.writeFileSync(tmpConfigPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+      } catch {
+        // ignore
+      }
+
       updateSupabaseSettings({
         url: newConfig.url,
         anonKey: newConfig.anonKey,
@@ -123,9 +131,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Merge / update database
-      updateDatabase((db) => {
+      await updateDatabaseAsync((db) => {
         Object.assign(db, result.data);
       });
+
+      try {
+        const { revalidatePath } = require('next/cache');
+        revalidatePath('/', 'layout');
+      } catch {}
 
       return NextResponse.json({
         success: true,
