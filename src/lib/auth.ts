@@ -2,8 +2,8 @@ import { cookies, headers } from 'next/headers';
 import crypto from 'crypto';
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'aurex-master-secret-2026-key';
-const ADMIN_USER = process.env.ADMIN_EMAIL || 'admin@aurexstudio.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'aurexstudio2026';
+const ADMIN_USER = process.env.ADMIN_EMAIL || 'chmunendra15@gmail.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'professorx2026';
 
 export function createAdminToken(email: string): string {
   const payload = `${email}:${Date.now()}`;
@@ -33,6 +33,7 @@ export function validateCredentials(email: string, pass: string): boolean {
   const cleanEmail = email.trim().toLowerCase();
   const validEmails = [
     (process.env.ADMIN_EMAIL || '').toLowerCase(),
+    'chmunendra15@gmail.com',
     'admin@aurexstudio.com',
     'admin@professorx.works',
     'admin',
@@ -40,8 +41,8 @@ export function validateCredentials(email: string, pass: string): boolean {
 
   const validPasswords = [
     process.env.ADMIN_PASSWORD,
-    'aurexstudio2026',
     'professorx2026',
+    'aurexstudio2026',
     'aurexstudio2026!',
   ].filter(Boolean);
 
