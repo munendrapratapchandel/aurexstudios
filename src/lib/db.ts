@@ -8,11 +8,19 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 const REVISIONS_DIR = path.join(DATA_DIR, 'revisions');
 
 function ensureDirectories() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {
+    // Read-only serverless environment (e.g. Vercel)
   }
-  if (!fs.existsSync(REVISIONS_DIR)) {
-    fs.mkdirSync(REVISIONS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(REVISIONS_DIR)) {
+      fs.mkdirSync(REVISIONS_DIR, { recursive: true });
+    }
+  } catch {
+    // Read-only serverless environment (e.g. Vercel)
   }
 }
 
@@ -23,26 +31,34 @@ let lastDbMtime: number = 0;
 export function getDatabase(): DatabaseSchema {
   ensureDirectories();
 
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialDatabaseData, null, 2), 'utf-8');
-    memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
-    lastDbMtime = fs.statSync(DB_FILE).mtimeMs;
-    return memoryDb!;
-  }
-
   try {
-    const stat = fs.statSync(DB_FILE);
-    if (memoryDb && stat.mtimeMs === lastDbMtime) {
-      return memoryDb;
+    if (!fs.existsSync(DB_FILE)) {
+      try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(initialDatabaseData, null, 2), 'utf-8');
+      } catch {
+        // Read-only filesystem, cannot write seed to disk
+      }
+      if (!memoryDb) {
+        memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
+      }
+      return memoryDb!;
+    }
+
+    try {
+      const stat = fs.statSync(DB_FILE);
+      if (memoryDb && stat.mtimeMs === lastDbMtime) {
+        return memoryDb;
+      }
+      lastDbMtime = stat.mtimeMs;
+    } catch {
+      // ignore stat error in restricted environments
     }
 
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
     const parsed = JSON.parse(raw);
     memoryDb = parsed;
-    lastDbMtime = stat.mtimeMs;
     return parsed;
   } catch (err) {
-    console.error('Error reading database file, using fallback seed:', err);
     if (memoryDb) return memoryDb;
     memoryDb = JSON.parse(JSON.stringify(initialDatabaseData));
     return memoryDb!;
@@ -53,40 +69,47 @@ export function updateDatabase(updater: (db: DatabaseSchema) => void): DatabaseS
   ensureDirectories();
   const db = getDatabase();
 
-  // Create backup revision before applying change
+  // Create backup revision before applying change (safe on read-only environments)
   try {
-    const currentVersion = db.version || 1;
-    const revisionPath = path.join(REVISIONS_DIR, `rev-${currentVersion}-${Date.now()}.json`);
-    fs.writeFileSync(revisionPath, JSON.stringify(db, null, 2), 'utf-8');
+    if (fs.existsSync(REVISIONS_DIR)) {
+      const currentVersion = db.version || 1;
+      const revisionPath = path.join(REVISIONS_DIR, `rev-${currentVersion}-${Date.now()}.json`);
+      fs.writeFileSync(revisionPath, JSON.stringify(db, null, 2), 'utf-8');
 
-    // Clean up old revisions if more than 30 exist
-    const files = fs.readdirSync(REVISIONS_DIR);
-    if (files.length > 30) {
-      files
-        .sort()
-        .slice(0, files.length - 30)
-        .forEach((f) => {
-          try {
-            fs.unlinkSync(path.join(REVISIONS_DIR, f));
-          } catch {
-            // ignore
-          }
-        });
+      // Clean up old revisions if more than 30 exist
+      const files = fs.readdirSync(REVISIONS_DIR);
+      if (files.length > 30) {
+        files
+          .sort()
+          .slice(0, files.length - 30)
+          .forEach((f) => {
+            try {
+              fs.unlinkSync(path.join(REVISIONS_DIR, f));
+            } catch {
+              // ignore
+            }
+          });
+      }
     }
-  } catch (revErr) {
-    console.warn('Could not save revision snapshot:', revErr);
+  } catch {
+    // Read-only snapshot bypass
   }
 
   updater(db);
   db.version = (db.version || 1) + 1;
   db.updatedAt = new Date().toISOString();
 
-  // Atomic write via temp file
-  const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-  fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), 'utf-8');
-  fs.renameSync(tempFile, DB_FILE);
+  // Atomic write via temp file (safe on read-only environments)
+  try {
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+    fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DB_FILE);
+  } catch {
+    // Read-only disk on Vercel: safely maintained in memoryDb & Supabase
+  }
 
   memoryDb = db;
+
 
   // Background auto-sync to Supabase if configured and enabled
   try {

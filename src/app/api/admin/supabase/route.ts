@@ -67,11 +67,6 @@ export async function POST(req: NextRequest) {
     if (action === 'save-config') {
       // Save configuration to data/supabase.json and db.supabaseConfig
       const configPath = path.join(process.cwd(), 'data', 'supabase.json');
-      const dataDir = path.join(process.cwd(), 'data');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
       const existingCreds = getSupabaseCredentials();
 
       const newConfig = {
@@ -81,7 +76,16 @@ export async function POST(req: NextRequest) {
         bucket: typeof storageBucket === 'string' && storageBucket.trim() ? storageBucket.trim() : existingCreds.storageBucket,
       };
 
-      fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+      try {
+        const dataDir = path.join(process.cwd(), 'data');
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+      } catch {
+        // Read-only serverless filesystem bypass
+      }
+
 
       updateSupabaseSettings({
         url: newConfig.url,
