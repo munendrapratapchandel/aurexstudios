@@ -1,6 +1,6 @@
 {
-  "version": 122,
-  "updatedAt": "2026-10-05T13:28:46.912Z",
+  "version": 126,
+  "updatedAt": "2026-10-05T14:10:51.551Z",
   "siteSettings": {
     "siteName": "Aurex Studio",
     "tagline": "Development · Design · Digital Experiences",
@@ -70,9 +70,9 @@
       "statusText": "Active Production Release",
       "link": "/works/aurex-studio"
     },
-    "experienceYears": "6+ Years",
-    "completedProjectsCount": "85+",
-    "happyClientsCount": "60+",
+    "experienceYears": "2+ Years",
+    "completedProjectsCount": "45+",
+    "happyClientsCount": "30+",
     "codeLinesCount": "500k+",
     "mediaUrl": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80"
   },
@@ -1176,7 +1176,7 @@
       "/services/discord-development": 88,
       "/services/discord-bots": 94,
       "/faq": 168,
-      "/contact": 230,
+      "/contact": 232,
       "/works/aurex-studio": 2,
       "/works/vortex-sentinel-bot": 1,
       "/dashboard": 5,
@@ -1188,7 +1188,7 @@
       "Minecraft Development": 39,
       "Discord Development": 24
     },
-    "lastUpdated": "2026-10-05T13:28:46.912Z"
+    "lastUpdated": "2026-10-05T14:08:21.044Z"
   },
   "sessions": [
     {
@@ -1200,7 +1200,7 @@
     {
       "sessionId": "sess_5931b465ef02a6d463bedd2c842e1a73",
       "ipHash": "837ec5754f50",
-      "lastSeen": 1791206926912,
+      "lastSeen": 1791209301044,
       "createdAt": 1791189531347
     }
   ],

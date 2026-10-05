@@ -60,6 +60,11 @@ import {
   Zap,
   Mail,
   Sliders,
+  Database,
+  Cloud,
+  RefreshCw,
+  Key,
+  HardDrive,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -84,6 +89,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
     | 'media'
     | 'analytics'
     | 'settings'
+    | 'supabase'
     | 'revisions'
   >('overview');
 
@@ -123,6 +129,18 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingLightLogo, setUploadingLightLogo] = useState(false);
   const [uploadingDarkLogo, setUploadingDarkLogo] = useState(false);
+
+  // Supabase Cloud states
+  const [supabaseLoading, setSupabaseLoading] = useState(false);
+  const [supabaseStatus, setSupabaseStatus] = useState<any>(null);
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
+  const [supabaseServiceKey, setSupabaseServiceKey] = useState('');
+  const [supabaseBucket, setSupabaseBucket] = useState('aurex-media');
+  const [supabaseAutoSync, setSupabaseAutoSync] = useState(true);
+  const [supabaseSqlSchema, setSupabaseSqlSchema] = useState('');
+  const [sqlCopied, setSqlCopied] = useState(false);
+
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -606,6 +624,121 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
     }
   };
 
+  // 8. Supabase Cloud Handlers
+  const loadSupabaseInfo = async () => {
+    try {
+      setSupabaseLoading(true);
+      const res = await fetch('/api/admin/supabase');
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setSupabaseStatus(json.status);
+        if (json.config) {
+          setSupabaseUrl(json.config.url || '');
+          setSupabaseBucket(json.config.storageBucket || 'aurex-media');
+          setSupabaseAutoSync(json.config.autoSync ?? true);
+        }
+        if (json.sqlSchema) {
+          setSupabaseSqlSchema(json.sqlSchema);
+        }
+      }
+    } catch (e: any) {
+      console.error('Failed to load Supabase info:', e);
+    } finally {
+      setSupabaseLoading(false);
+    }
+  };
+
+  const handleSaveSupabaseConfig = async () => {
+    try {
+      setSupabaseLoading(true);
+      const res = await fetch('/api/admin/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save-config',
+          url: supabaseUrl,
+          anonKey: supabaseAnonKey,
+          serviceRoleKey: supabaseServiceKey,
+          storageBucket: supabaseBucket,
+          autoSync: supabaseAutoSync,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to save config');
+      setSupabaseStatus(json.status);
+      showToast('Supabase credentials saved & verified!');
+    } catch (err: any) {
+      alert('Error saving Supabase config: ' + err.message);
+    } finally {
+      setSupabaseLoading(false);
+    }
+  };
+
+  const handleTestSupabase = async () => {
+    try {
+      setSupabaseLoading(true);
+      const res = await fetch('/api/admin/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'test' }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Test failed');
+      setSupabaseStatus(json.status);
+      showToast(json.status?.message || 'Connection test completed!');
+    } catch (err: any) {
+      alert('Supabase test failed: ' + err.message);
+    } finally {
+      setSupabaseLoading(false);
+    }
+  };
+
+  const handlePushToSupabase = async () => {
+    if (!confirm('Push all local database content (projects, services, developers, inquiries, settings) to Supabase Cloud?')) return;
+    try {
+      setSupabaseLoading(true);
+      const res = await fetch('/api/admin/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync-push' }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Push failed');
+      showToast(json.message || 'Local data pushed to Supabase Cloud successfully!');
+      handleTestSupabase();
+    } catch (err: any) {
+      alert('Supabase push failed: ' + err.message);
+    } finally {
+      setSupabaseLoading(false);
+    }
+  };
+
+  const handlePullFromSupabase = async () => {
+    if (!confirm('Pull and restore database from Supabase Cloud? This will update local db.json with cloud data.')) return;
+    try {
+      setSupabaseLoading(true);
+      const res = await fetch('/api/admin/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync-pull' }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Pull failed');
+      alert('Data pulled from Supabase successfully! The page will now reload.');
+      window.location.reload();
+    } catch (err: any) {
+      alert('Supabase pull failed: ' + err.message);
+    } finally {
+      setSupabaseLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === 'supabase') {
+      loadSupabaseInfo();
+    }
+  }, [activeTab]);
+
   return (
     <div className="flex min-h-screen bg-[#07080c] font-sans text-slate-100">
       {/* Toast notification */}
@@ -653,6 +786,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
               { id: 'media', label: 'Media Library', icon: Image },
               { id: 'analytics', label: 'Visitor Telemetry', icon: BarChart3 },
               { id: 'settings', label: 'Branding & SEO', icon: Settings },
+              { id: 'supabase', label: 'Supabase Cloud', icon: Database, badge: supabaseStatus?.isConnected ? '🟢' : 'Cloud' },
               { id: 'revisions', label: 'Version Revisions', icon: History },
             ].map((item) => {
               const Icon = item.icon;
@@ -663,6 +797,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                   onClick={() => {
                     setActiveTab(item.id as any);
                     if (item.id === 'revisions') loadRevisions();
+                    if (item.id === 'supabase') loadSupabaseInfo();
                   }}
                   className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all ${
                     isActive
@@ -5329,6 +5464,309 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                 >
                   Save Settings & SEO
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: SUPABASE CLOUD INTEGRATION */}
+        {activeTab === 'supabase' && (
+          <div className="p-8 max-w-5xl space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <Database className="h-6 w-6 text-emerald-400" />
+                    <span>Supabase Cloud Integration</span>
+                  </h2>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold ${
+                      supabaseStatus?.isConnected
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : supabaseStatus?.isConfigured
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                        : 'bg-white/5 text-slate-400 border border-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        supabaseStatus?.isConnected
+                          ? 'bg-emerald-400 animate-pulse'
+                          : supabaseStatus?.isConfigured
+                          ? 'bg-amber-400'
+                          : 'bg-slate-500'
+                      }`}
+                    />
+                    {supabaseStatus?.isConnected
+                      ? 'Cloud Connected'
+                      : supabaseStatus?.isConfigured
+                      ? 'Configured (Tables Pending)'
+                      : 'Local Engine (data/db.json)'}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Dual-mode enterprise architecture: Realtime PostgreSQL database, media storage bucket, and automated background sync with zero-downtime local JSON fallback.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestSupabase}
+                  disabled={supabaseLoading}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 transition-all disabled:opacity-50"
+                >
+                  <Activity className="h-3.5 w-3.5 text-sky-400" />
+                  <span>{supabaseLoading ? 'Pinging...' : 'Test Connection'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePushToSupabase}
+                  disabled={supabaseLoading || !supabaseStatus?.isConfigured}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50"
+                >
+                  <Cloud className="h-3.5 w-3.5" />
+                  <span>Push to Supabase</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePullFromSupabase}
+                  disabled={supabaseLoading || !supabaseStatus?.isConfigured}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-sky-600/90 hover:bg-sky-500 text-white shadow-lg shadow-sky-500/20 transition-all disabled:opacity-50"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Pull from Supabase</span>
+                </button>
+              </div>
+            </div>
+
+            {/* STATUS BANNER */}
+            {supabaseStatus && (
+              <div
+                className={`p-4 rounded-2xl border text-xs flex items-start gap-3 ${
+                  supabaseStatus.isConnected
+                    ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                    : supabaseStatus.isConfigured
+                    ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
+                    : 'bg-slate-900 border-white/10 text-slate-300'
+                }`}
+              >
+                <div className="mt-0.5">
+                  {supabaseStatus.isConnected ? (
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-amber-400" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold text-white">
+                    {supabaseStatus.isConnected ? 'Cloud Connection Active' : 'Supabase Status Notice'}
+                  </div>
+                  <p className="leading-relaxed opacity-90">{supabaseStatus.message}</p>
+                  {supabaseStatus.details && (
+                    <div className="flex flex-wrap gap-3 pt-2 text-[11px] font-mono">
+                      <span className={supabaseStatus.details.siteDataTable ? 'text-emerald-400' : 'text-rose-400'}>
+                        {supabaseStatus.details.siteDataTable ? '✓' : '✗'} Table: site_data
+                      </span>
+                      <span className={supabaseStatus.details.inquiriesTable ? 'text-emerald-400' : 'text-rose-400'}>
+                        {supabaseStatus.details.inquiriesTable ? '✓' : '✗'} Table: inquiries
+                      </span>
+                      <span className={supabaseStatus.details.feedbackTable ? 'text-emerald-400' : 'text-rose-400'}>
+                        {supabaseStatus.details.feedbackTable ? '✓' : '✗'} Table: feedback
+                      </span>
+                      <span className={supabaseStatus.details.storageBucket ? 'text-emerald-400' : 'text-slate-400'}>
+                        {supabaseStatus.details.storageBucket ? '✓' : '○'} Bucket: {supabaseStatus.bucket || 'aurex-media'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* CREDENTIALS FORM */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Key className="h-4 w-4 text-sky-400" />
+                    <span>Supabase Cloud Credentials</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Enter your Supabase project keys below. You can find these in your Supabase project dashboard under <strong>Settings → API</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Project URL */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Supabase Project URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://your-project-ref.supabase.co"
+                    value={supabaseUrl}
+                    onChange={(e) => setSupabaseUrl(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-500 block font-mono">
+                    Environment variable: NEXT_PUBLIC_SUPABASE_URL
+                  </span>
+                </div>
+
+                {/* Public Anon Key */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Supabase Public Anon Key
+                  </label>
+                  <input
+                    type="password"
+                    placeholder={supabaseStatus?.hasAnonKey ? '•••••••••••••••• (Key Configured)' : 'eyJhbGciOi...'}
+                    value={supabaseAnonKey}
+                    onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-500 block font-mono">
+                    Environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+                  </span>
+                </div>
+
+                {/* Service Role Secret Key */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Supabase Service Role Key <span className="text-sky-400">(Recommended for Server Operations)</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder={supabaseStatus?.hasServiceKey ? '•••••••••••••••• (Key Configured)' : 'eyJhbGciOi...'}
+                    value={supabaseServiceKey}
+                    onChange={(e) => setSupabaseServiceKey(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-500 block font-mono">
+                    Environment variable: SUPABASE_SERVICE_ROLE_KEY
+                  </span>
+                </div>
+
+                {/* Storage Bucket */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Media Storage Bucket Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="aurex-media"
+                    value={supabaseBucket}
+                    onChange={(e) => setSupabaseBucket(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-500 block">
+                    Bucket for storing uploaded logos, developer photos, and project assets.
+                  </span>
+                </div>
+
+                {/* Auto Sync Toggle */}
+                <div className="space-y-2 flex flex-col justify-center">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Background Auto-Sync
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer py-1">
+                    <input
+                      type="checkbox"
+                      checked={supabaseAutoSync}
+                      onChange={(e) => setSupabaseAutoSync(e.target.checked)}
+                      className="h-4 w-4 rounded border-white/10 bg-white/5 text-sky-500 focus:ring-sky-500"
+                    />
+                    <span className="text-xs text-slate-300 font-medium">
+                      Auto-sync all changes to Supabase Cloud on every admin save
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveSupabaseConfig}
+                  disabled={supabaseLoading}
+                  className="flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 transition-all disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{supabaseLoading ? 'Saving...' : 'Save & Verify Supabase'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 1-CLICK SQL MIGRATION SCRIPT CARD */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Terminal className="h-4 w-4 text-emerald-400" />
+                    <span>Supabase SQL Setup Script (1-Click Copy)</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Open your Supabase Project → <strong>SQL Editor</strong> → Paste this script and click <strong>Run</strong>.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://supabase.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all"
+                  >
+                    <span>Supabase Dashboard</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (supabaseSqlSchema) {
+                        navigator.clipboard.writeText(supabaseSqlSchema);
+                        setSqlCopied(true);
+                        showToast('SQL schema copied to clipboard!');
+                        setTimeout(() => setSqlCopied(false), 2500);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all"
+                  >
+                    {sqlCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    <span>{sqlCopied ? 'Copied!' : 'Copy SQL'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Code Box */}
+              <div className="relative rounded-2xl border border-white/10 bg-[#07080c] p-4 font-mono text-[11px] text-slate-300 max-h-72 overflow-y-auto leading-relaxed scrollbar-thin">
+                <pre>{supabaseSqlSchema || '-- Loading schema...'}</pre>
+              </div>
+
+              {/* Quick Setup Instructions */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                  <span className="font-mono text-[10px] font-bold text-sky-400">STEP 1</span>
+                  <div className="text-xs font-semibold text-white">Create Supabase Project</div>
+                  <p className="text-[11px] text-slate-400 leading-normal">
+                    Create a free project at supabase.com and wait 1 minute for Postgres setup.
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                  <span className="font-mono text-[10px] font-bold text-emerald-400">STEP 2</span>
+                  <div className="text-xs font-semibold text-white">Run SQL Schema</div>
+                  <p className="text-[11px] text-slate-400 leading-normal">
+                    Copy the script above, paste into SQL Editor, and click <strong>Run</strong>.
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                  <span className="font-mono text-[10px] font-bold text-indigo-400">STEP 3</span>
+                  <div className="text-xs font-semibold text-white">Push & Sync</div>
+                  <p className="text-[11px] text-slate-400 leading-normal">
+                    Paste Project URL and API Keys above, then click <strong>Push to Supabase</strong>.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

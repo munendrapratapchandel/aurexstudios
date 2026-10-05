@@ -87,10 +87,50 @@ export function updateDatabase(updater: (db: DatabaseSchema) => void): DatabaseS
   fs.renameSync(tempFile, DB_FILE);
 
   memoryDb = db;
+
+  // Background auto-sync to Supabase if configured and enabled
+  try {
+    const { getSupabaseCredentials, pushFullStateToSupabase } = require('./supabase');
+    const creds = getSupabaseCredentials();
+    if (creds.isConfigured && db.supabaseConfig?.autoSync !== false) {
+      pushFullStateToSupabase(db).catch((err: any) => {
+        console.warn('Background Supabase auto-sync notice:', err?.message || err);
+      });
+    }
+  } catch {
+    // Non-blocking
+  }
+
   return db;
 }
 
 // Helper getters
+export function getSupabaseSettings() {
+  const db = getDatabase();
+  return db.supabaseConfig || {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    storageBucket: 'aurex-media',
+    autoSync: true,
+  };
+}
+
+export function updateSupabaseSettings(config: Partial<NonNullable<DatabaseSchema['supabaseConfig']>>) {
+  return updateDatabase((db) => {
+    db.supabaseConfig = {
+      ...(db.supabaseConfig || {
+        url: '',
+        anonKey: '',
+        serviceRoleKey: '',
+        storageBucket: 'aurex-media',
+        autoSync: true,
+      }),
+      ...config,
+    };
+  });
+}
+
 export function getSiteSettings() {
   return getDatabase().siteSettings;
 }

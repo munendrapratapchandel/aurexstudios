@@ -38,6 +38,14 @@ export async function POST(req: NextRequest) {
       db.contactRequests.unshift(newRequest);
     });
 
+    // Mirror directly to Supabase inquiries table if configured
+    try {
+      const { pushInquiryToSupabase } = require('@/lib/supabase');
+      pushInquiryToSupabase(newRequest).catch((e: any) => console.warn('Supabase inquiry push warning:', e));
+    } catch {
+      // Non-blocking
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Your project inquiry has been received! The Aurex Studio team will review your scope and reach out within 24 hours.',

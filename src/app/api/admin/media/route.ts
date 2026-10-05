@@ -57,7 +57,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const publicUrl = `/uploads/${filename}`;
+    let publicUrl = `/uploads/${filename}`;
+
+    // Upload to Supabase Storage if configured
+    try {
+      const { isSupabaseConfigured, uploadMediaToSupabase } = require('@/lib/supabase');
+      if (isSupabaseConfigured()) {
+        const storageRes = await uploadMediaToSupabase(buffer, filename, file.type || 'application/octet-stream');
+        if (storageRes.success && storageRes.url) {
+          publicUrl = storageRes.url;
+        }
+      }
+    } catch (storageErr) {
+      console.warn('Supabase storage upload fallback to local disk:', storageErr);
+    }
+
 
     const newMedia: MediaItem = {
       id: 'med-' + Date.now(),

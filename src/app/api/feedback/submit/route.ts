@@ -36,9 +36,17 @@ export async function POST(req: NextRequest) {
       db.feedback.unshift(newItem);
     });
 
+    // Mirror to Supabase feedback table if configured
+    try {
+      const { pushFeedbackToSupabase } = require('@/lib/supabase');
+      pushFeedbackToSupabase(newItem).catch((e: any) => console.warn('Supabase feedback push warning:', e));
+    } catch {
+      // Non-blocking
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Thank you for your feedback! It will appear publicly once approved by Professorx.',
+      message: 'Thank you for your feedback! It will appear publicly once approved by Aurex Studio.',
       feedback: newItem,
     });
   } catch (error) {

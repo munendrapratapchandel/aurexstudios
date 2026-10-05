@@ -275,6 +275,14 @@ export interface Developer {
   updatedAt: string;
 }
 
+export interface SupabaseConfig {
+  url?: string;
+  anonKey?: string;
+  serviceRoleKey?: string;
+  storageBucket?: string;
+  autoSync?: boolean;
+}
+
 export interface DatabaseSchema {
   siteSettings: SiteSettings;
   heroContent: HeroContent;
@@ -292,6 +300,8 @@ export interface DatabaseSchema {
   visitorMetrics: VisitorMetrics;
   sessions: { sessionId: string; ipHash: string; lastSeen: number; createdAt: number }[];
   developers: Developer[];
+  supabaseConfig?: SupabaseConfig;
   version: number;
   updatedAt: string;
 }
+
