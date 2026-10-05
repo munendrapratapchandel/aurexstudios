@@ -4,6 +4,8 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { getSiteSettings } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
   variable: '--font-geist-sans',
@@ -38,12 +40,17 @@ export default function RootLayout({
 }>) {
   const settings = getSiteSettings();
   const favicon = settings.faviconUrl || '/favicon.ico';
+  const faviconType = favicon.endsWith('.png')
+    ? 'image/png'
+    : favicon.endsWith('.svg')
+    ? 'image/svg+xml'
+    : 'image/x-icon';
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        <link rel="icon" href={favicon} sizes="any" />
-        <link rel="shortcut icon" href={favicon} />
+        <link rel="icon" href={favicon} type={faviconType} sizes="any" />
+        <link rel="shortcut icon" href={favicon} type={faviconType} />
         <link rel="apple-touch-icon" href={favicon} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

@@ -47,6 +47,16 @@ export async function POST(req: NextRequest) {
 
     fs.writeFileSync(filePath, buffer);
 
+    // If uploading a favicon, also mirror it to root public/favicon.ico and src/app/favicon.ico
+    if (file.name.toLowerCase().endsWith('.ico') || category === 'favicon' || file.name.toLowerCase().includes('favicon')) {
+      try {
+        fs.writeFileSync(path.join(process.cwd(), 'public', 'favicon.ico'), buffer);
+        fs.writeFileSync(path.join(process.cwd(), 'src', 'app', 'favicon.ico'), buffer);
+      } catch (e) {
+        console.error('Failed to sync favicon to root:', e);
+      }
+    }
+
     const publicUrl = `/uploads/${filename}`;
 
     const newMedia: MediaItem = {

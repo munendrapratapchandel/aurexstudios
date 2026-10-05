@@ -1,13 +1,13 @@
 {
-  "version": 101,
-  "updatedAt": "2026-10-05T12:53:29.643Z",
+  "version": 108,
+  "updatedAt": "2026-10-05T13:04:13.698Z",
   "siteSettings": {
     "siteName": "Aurex Studio",
     "tagline": "Development · Design · Digital Experiences",
-    "logoUrl": "/media/logo.svg",
-    "lightLogoUrl": "/media/logo-light.svg",
-    "darkLogoUrl": "/media/logo-dark.svg",
-    "faviconUrl": "/favicon.ico",
+    "logoUrl": "/uploads/1791205366955-Aurex.png",
+    "lightLogoUrl": "",
+    "darkLogoUrl": "",
+    "faviconUrl": "/uploads/1791205424504-Aurex.ico",
     "metaTitle": "Aurex Studio — Digital Workspace & Portfolio",
     "metaDescription": "Digital development workspace, portfolio & services platform of Aurex Studio. Building across Web, Minecraft & Discord.",
     "ogImageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
@@ -1082,6 +1082,26 @@
     }
   ],
   "media": [
+    {
+      "id": "med-1791205424507",
+      "filename": "1791205424504-Aurex.ico",
+      "originalName": "Aurex.ico",
+      "url": "/uploads/1791205424504-Aurex.ico",
+      "mimeType": "image/x-icon",
+      "size": 432254,
+      "category": "image",
+      "uploadedAt": "2026-10-05T13:03:44.507Z"
+    },
+    {
+      "id": "med-1791205366960",
+      "filename": "1791205366955-Aurex.png",
+      "originalName": "Aurex.png",
+      "url": "/uploads/1791205366955-Aurex.png",
+      "mimeType": "image/png",
+      "size": 1100976,
+      "category": "image",
+      "uploadedAt": "2026-10-05T13:02:46.960Z"
+    },
     {
       "id": "med-1791190002466",
       "filename": "1791190002457-viraasat.gif",

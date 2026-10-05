@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Terminal, Shield, MessageSquare, Heart } from 'lucide-react';
 import { SocialLink } from '@/types';
@@ -21,6 +23,7 @@ export function Footer({
   availability = 'available',
   availabilityText = 'Currently accepting new client projects',
 }: FooterProps) {
+  const [logoFailed, setLogoFailed] = useState(false);
   const getIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'discord':
@@ -45,9 +48,14 @@ export function Footer({
           {/* Column 1: Brand & Positioning */}
           <div className="space-y-4 md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              {logoUrl ? (
+              {logoUrl && !logoFailed ? (
                 <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-slate-200/60 bg-white p-1 shadow-md dark:border-white/10 dark:bg-[#0e1017]">
-                  <img src={logoUrl} alt={siteName} className="max-h-full max-w-full object-contain" />
+                  <img
+                    src={logoUrl}
+                    alt={siteName}
+                    onError={() => setLogoFailed(true)}
+                    className="max-h-full max-w-full object-contain"
+                  />
                 </div>
               ) : (
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500 text-white shadow-md shadow-sky-500/25">

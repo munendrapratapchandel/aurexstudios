@@ -26,10 +26,29 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const currentLogo =
+  const isValidThemeLogo = (url?: string) =>
+    url && url.trim() !== '' && !url.includes('/media/logo-');
+
+  const preferredLogo =
     theme === 'dark'
-      ? darkLogoUrl || logoUrl
-      : lightLogoUrl || logoUrl;
+      ? (isValidThemeLogo(darkLogoUrl) ? darkLogoUrl : logoUrl)
+      : (isValidThemeLogo(lightLogoUrl) ? lightLogoUrl : logoUrl);
+
+  const [activeLogo, setActiveLogo] = useState<string | undefined>(preferredLogo);
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => {
+    setActiveLogo(preferredLogo);
+    setLogoFailed(false);
+  }, [preferredLogo, theme]);
+
+  const handleLogoError = () => {
+    if (activeLogo !== logoUrl && logoUrl) {
+      setActiveLogo(logoUrl);
+    } else {
+      setLogoFailed(true);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,11 +84,12 @@ export function Navbar({
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="group flex items-center gap-3">
-          {currentLogo ? (
+          {activeLogo && !logoFailed ? (
             <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200/60 bg-white/80 p-1 shadow-md shadow-sky-500/10 backdrop-blur-md transition-transform group-hover:scale-105 dark:border-white/10 dark:bg-[#141824]/80">
               <img
-                src={currentLogo}
+                src={activeLogo}
                 alt={siteName}
+                onError={handleLogoError}
                 className="max-h-full max-w-full object-contain"
               />
             </div>
