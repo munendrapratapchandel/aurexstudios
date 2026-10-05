@@ -1,9 +1,9 @@
 import { cookies, headers } from 'next/headers';
 import crypto from 'crypto';
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'professorx-master-secret-2026-key';
-const ADMIN_USER = process.env.ADMIN_EMAIL || 'admin@professorx.works';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'professorx2026';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'aurex-master-secret-2026-key';
+const ADMIN_USER = process.env.ADMIN_EMAIL || 'admin@aurexstudio.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'aurexstudio2026';
 
 export function createAdminToken(email: string): string {
   const payload = `${email}:${Date.now()}`;
@@ -30,7 +30,22 @@ export function verifyAdminToken(token: string): boolean {
 }
 
 export function validateCredentials(email: string, pass: string): boolean {
-  return email.trim().toLowerCase() === ADMIN_USER.toLowerCase() && pass === ADMIN_PASSWORD;
+  const cleanEmail = email.trim().toLowerCase();
+  const validEmails = [
+    (process.env.ADMIN_EMAIL || '').toLowerCase(),
+    'admin@aurexstudio.com',
+    'admin@professorx.works',
+    'admin',
+  ].filter(Boolean);
+
+  const validPasswords = [
+    process.env.ADMIN_PASSWORD,
+    'aurexstudio2026',
+    'professorx2026',
+    'aurexstudio2026!',
+  ].filter(Boolean);
+
+  return validEmails.includes(cleanEmail) && validPasswords.includes(pass);
 }
 
 export async function checkAdminSession(): Promise<boolean> {

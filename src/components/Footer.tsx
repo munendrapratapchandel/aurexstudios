@@ -138,15 +138,6 @@ export function Footer({
                 </a>
               ))}
             </div>
-            <div className="mt-6">
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-400 transition hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-400"
-              >
-                <Shield className="h-3.5 w-3.5" />
-                <span>Admin Workspace</span>
-              </Link>
-            </div>
           </div>
         </div>
 

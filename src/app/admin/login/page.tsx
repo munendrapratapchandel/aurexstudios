@@ -6,8 +6,8 @@ import { Terminal, Shield, Lock, Mail, ArrowRight, Loader2, KeyRound } from 'luc
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@professorx.works');
-  const [password, setPassword] = useState('professorx2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,10 +49,10 @@ export default function AdminLoginPage() {
             <Shield className="h-7 w-7 text-white" />
           </div>
           <h1 className="mt-4 font-mono text-2xl font-bold tracking-tight text-white">
-            Professorx Works Admin
+            Aurex Studio Admin
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Private Content Management & Telemetry System
+            Private Content Management & Control Console
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@professorx.works"
+                  placeholder="admin@aurexstudio.com"
                   className="w-full rounded-xl border border-white/10 bg-[#141824] py-3 pl-10 pr-4 text-xs text-white outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
               </div>
@@ -96,14 +96,6 @@ export default function AdminLoginPage() {
                   placeholder="••••••••••••"
                   className="w-full rounded-xl border border-white/10 bg-[#141824] py-3 pl-10 pr-4 text-xs text-white outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
-              </div>
-            </div>
-
-            {/* Quick Demo Hint */}
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 text-[11px] text-slate-400">
-              <span className="font-semibold text-sky-400">Default Credentials Pre-filled:</span>
-              <div className="font-mono mt-0.5 text-slate-300">
-                admin@professorx.works / professorx2026
               </div>
             </div>
 

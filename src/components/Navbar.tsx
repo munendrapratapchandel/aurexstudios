@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
-import { Sun, Moon, Menu, X, Shield, Terminal } from 'lucide-react';
+import { Sun, Moon, Menu, X, Terminal } from 'lucide-react';
 
 interface NavbarProps {
   siteName?: string;
@@ -147,15 +147,6 @@ export function Navbar({
               <Moon className="h-4.5 w-4.5 text-sky-600 transition-transform hover:-rotate-12" />
             )}
           </button>
-
-          {/* Quick Admin Access */}
-          <Link
-            href="/admin"
-            title="Aurex Studio Admin Panel"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/60 bg-transparent text-slate-400 transition hover:border-slate-300 hover:text-slate-700 dark:border-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
-          >
-            <Shield className="h-4 w-4" />
-          </Link>
 
           {/* Mobile hamburger menu toggle */}
           <button
