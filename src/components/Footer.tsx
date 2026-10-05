@@ -7,6 +7,7 @@ import { DiscordIcon, InstagramIcon, TwitterIcon, GithubIcon } from './SocialIco
 interface FooterProps {
   siteName?: string;
   tagline?: string;
+  logoUrl?: string;
   socials?: SocialLink[];
   availability?: string;
   availabilityText?: string;
@@ -14,7 +15,8 @@ interface FooterProps {
 
 export function Footer({
   siteName = 'Aurex Studio',
-  tagline = 'Development · Design · Digital Experiences',
+  tagline,
+  logoUrl,
   socials = [],
   availability = 'available',
   availabilityText = 'Currently accepting new client projects',
@@ -43,9 +45,15 @@ export function Footer({
           {/* Column 1: Brand & Positioning */}
           <div className="space-y-4 md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500 text-white shadow-md shadow-sky-500/25">
-                <Terminal className="h-4.5 w-4.5" />
-              </div>
+              {logoUrl ? (
+                <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-slate-200/60 bg-white p-1 shadow-md dark:border-white/10 dark:bg-[#0e1017]">
+                  <img src={logoUrl} alt={siteName} className="max-h-full max-w-full object-contain" />
+                </div>
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500 text-white shadow-md shadow-sky-500/25">
+                  <Terminal className="h-4.5 w-4.5" />
+                </div>
+              )}
               <span className="font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                 {siteName}
               </span>

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Your project inquiry has been received! Professorx will review your scope and reach out within 24 hours.',
+      message: 'Your project inquiry has been received! The Aurex Studio team will review your scope and reach out within 24 hours.',
       requestId: newRequest.id,
     });
   } catch (error) {

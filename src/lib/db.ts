@@ -175,6 +175,30 @@ export function getMedia() {
   return getDatabase().media.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
 }
 
+export function getDevelopers(onlyVisible = true) {
+  const list = getDatabase().developers || [];
+  if (onlyVisible) {
+    return list.filter((d) => d.isVisible).sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+  return list.sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+export function getAllDevelopers() {
+  return (getDatabase().developers || []).sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+export function getFeaturedDevelopers() {
+  return (getDatabase().developers || [])
+    .filter((d) => d.isVisible && d.isFeatured)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+export function getDeveloperByUsername(username: string) {
+  return (getDatabase().developers || []).find(
+    (d) => d.username.toLowerCase() === username.toLowerCase()
+  );
+}
+
 export function getVisitorMetrics() {
   const db = getDatabase();
   const now = Date.now();

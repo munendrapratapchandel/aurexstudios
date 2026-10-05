@@ -159,7 +159,7 @@ export interface ContactRequest {
   budgetRange: string;
   timeline: string;
   message: string;
-  status: 'New' | 'Reviewing' | 'Contacted' | 'In Progress' | 'Completed' | 'Rejected';
+  status: 'New' | 'Reviewing' | 'Contacted' | 'In Progress' | 'Accepted' | 'Declined' | 'Completed' | 'Rejected';
   internalNotes?: string;
   createdAt: string;
 }
@@ -195,6 +195,41 @@ export interface VisitorMetrics {
   lastUpdated: string;
 }
 
+export interface DeveloperSkill {
+  name: string;
+  level: string; // 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
+}
+
+export interface DeveloperSocial {
+  platform: string;
+  username: string;
+  url: string;
+}
+
+export interface Developer {
+  id: string;
+  name: string;
+  username: string; // slug for url /dashboard/developers/[username]
+  role: string;
+  shortBio: string;
+  fullBio: string;
+  profileImage: string;
+  coverImage?: string;
+  experience: string;
+  availability: 'Available' | 'Busy' | 'Working' | 'Away' | 'Unavailable';
+  customStatus?: string;
+  skills: DeveloperSkill[];
+  specializations: string[];
+  technologies: string[];
+  projectIds: string[]; // Associated project IDs
+  socials: DeveloperSocial[];
+  isFeatured: boolean;
+  isVisible: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DatabaseSchema {
   siteSettings: SiteSettings;
   heroContent: HeroContent;
@@ -210,6 +245,7 @@ export interface DatabaseSchema {
   media: MediaItem[];
   visitorMetrics: VisitorMetrics;
   sessions: { sessionId: string; ipHash: string; lastSeen: number; createdAt: number }[];
+  developers: Developer[];
   version: number;
   updatedAt: string;
 }

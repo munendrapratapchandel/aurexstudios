@@ -45,6 +45,8 @@ export default function HomePage() {
         siteName={settings.siteName}
         tagline={settings.tagline}
         logoUrl={settings.logoUrl}
+        lightLogoUrl={settings.lightLogoUrl}
+        darkLogoUrl={settings.darkLogoUrl}
       />
 
       <main>
@@ -83,6 +85,7 @@ export default function HomePage() {
       <Footer
         siteName={settings.siteName}
         tagline={settings.tagline}
+        logoUrl={settings.logoUrl}
         socials={socials}
         availability={settings.availability}
         availabilityText={settings.availabilityText}

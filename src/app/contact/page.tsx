@@ -17,7 +17,13 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-[#07080c] dark:text-white">
       <VisitorTracker />
-      <Navbar siteName={settings.siteName} tagline={settings.tagline} />
+      <Navbar
+        siteName={settings.siteName}
+        tagline={settings.tagline}
+        logoUrl={settings.logoUrl}
+        lightLogoUrl={settings.lightLogoUrl}
+        darkLogoUrl={settings.darkLogoUrl}
+      />
 
       <main className="pt-28 pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -34,7 +40,7 @@ export default function ContactPage() {
               </h1>
 
               <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
-                Submit your project goals, scope, and timeline below. Every inquiry is personally reviewed by Professorx with a prompt architectural response within 24 hours.
+                Submit your project goals, scope, and timeline below. Every inquiry is personally reviewed by the Aurex Studio team with a prompt architectural response within 24 hours.
               </p>
 
               {/* Engineering Guarantees */}
@@ -100,6 +106,7 @@ export default function ContactPage() {
       <Footer
         siteName={settings.siteName}
         tagline={settings.tagline}
+        logoUrl={settings.logoUrl}
         socials={socials}
         availability={settings.availability}
         availabilityText={settings.availabilityText}

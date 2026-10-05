@@ -71,7 +71,13 @@ export default function ServiceDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-[#07080c] dark:text-white">
       <VisitorTracker />
-      <Navbar siteName={settings.siteName} tagline={settings.tagline} />
+      <Navbar
+        siteName={settings.siteName}
+        tagline={settings.tagline}
+        logoUrl={settings.logoUrl}
+        lightLogoUrl={settings.lightLogoUrl}
+        darkLogoUrl={settings.darkLogoUrl}
+      />
 
       <main className="pt-28 pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -376,6 +382,7 @@ export default function ServiceDetailPage({ params }: PageProps) {
       <Footer
         siteName={settings.siteName}
         tagline={settings.tagline}
+        logoUrl={settings.logoUrl}
         socials={socials}
         availability={settings.availability}
         availabilityText={settings.availabilityText}

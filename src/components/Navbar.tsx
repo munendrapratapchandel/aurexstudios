@@ -10,13 +10,26 @@ interface NavbarProps {
   siteName?: string;
   tagline?: string;
   logoUrl?: string;
+  lightLogoUrl?: string;
+  darkLogoUrl?: string;
 }
 
-export function Navbar({ siteName = 'Aurex Studio', tagline }: NavbarProps) {
+export function Navbar({
+  siteName = 'Aurex Studio',
+  tagline,
+  logoUrl,
+  lightLogoUrl,
+  darkLogoUrl,
+}: NavbarProps) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const currentLogo =
+    theme === 'dark'
+      ? darkLogoUrl || logoUrl
+      : lightLogoUrl || logoUrl;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,10 +39,11 @@ export function Navbar({ siteName = 'Aurex Studio', tagline }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // HARD REQUIREMENT #2: Strictly only these 5 public navigation items!
+  // Aurex Studio Navigation: Home | Services | Dashboard | FAQ | Works | Contact
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Services', href: '/services' },
+    { label: 'Dashboard', href: '/dashboard' },
     { label: 'FAQ', href: '/faq' },
     { label: 'Works', href: '/works' },
     { label: 'Contact', href: '/contact' },
@@ -51,9 +65,19 @@ export function Navbar({ siteName = 'Aurex Studio', tagline }: NavbarProps) {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="group flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg shadow-sky-500/20 transition-transform group-hover:scale-105">
-            <Terminal className="h-5 w-5" />
-          </div>
+          {currentLogo ? (
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200/60 bg-white/80 p-1 shadow-md shadow-sky-500/10 backdrop-blur-md transition-transform group-hover:scale-105 dark:border-white/10 dark:bg-[#141824]/80">
+              <img
+                src={currentLogo}
+                alt={siteName}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg shadow-sky-500/20 transition-transform group-hover:scale-105">
+              <Terminal className="h-5 w-5" />
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-base font-bold tracking-tight text-slate-900 transition-colors group-hover:text-sky-500 dark:text-white">
@@ -107,7 +131,7 @@ export function Navbar({ siteName = 'Aurex Studio', tagline }: NavbarProps) {
           {/* Quick Admin Access */}
           <Link
             href="/admin"
-            title="Professorx Admin Panel"
+            title="Aurex Studio Admin Panel"
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/60 bg-transparent text-slate-400 transition hover:border-slate-300 hover:text-slate-700 dark:border-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
           >
             <Shield className="h-4 w-4" />

@@ -903,4 +903,137 @@ export const initialDatabaseData: DatabaseSchema = {
       createdAt: Date.now() - 120000,
     },
   ],
+  developers: [
+    {
+      id: 'dev-alex',
+      username: 'alex',
+      name: 'Alex Vance',
+      role: 'Full Stack Developer',
+      shortBio: 'Building modern high-performance web applications and fluid digital experiences.',
+      fullBio: 'Senior Full Stack Developer specializing in Next.js, Node.js, and distributed microservices. Dedicated to building hyper-responsive web interfaces with strict type-safety and modern design systems. Over 5 years of production experience shipping SaaS applications, dashboards, and client portals.',
+      profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+      coverImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1400&q=80',
+      experience: '5+ Years',
+      availability: 'Available',
+      customStatus: 'Available for new client sprints',
+      skills: [
+        { name: 'React', level: 'Advanced' },
+        { name: 'Next.js', level: 'Advanced' },
+        { name: 'TypeScript', level: 'Advanced' },
+        { name: 'Node.js', level: 'Intermediate' },
+        { name: 'Tailwind CSS', level: 'Expert' }
+      ],
+      specializations: ['Web Development', 'Frontend Architecture', 'UI/UX Engineering'],
+      technologies: ['React', 'Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
+      projectIds: ['proj-1', 'proj-5'],
+      socials: [
+        { platform: 'GitHub', username: 'alexvance-dev', url: 'https://github.com' },
+        { platform: 'X', username: '@alexv_dev', url: 'https://x.com' },
+        { platform: 'Discord', username: 'alex#0001', url: 'https://discord.com' }
+      ],
+      isFeatured: true,
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-05T00:00:00.000Z'
+    },
+    {
+      id: 'dev-professorx',
+      username: 'professorx',
+      name: 'Professorx',
+      role: 'Founder & Lead Systems Architect',
+      shortBio: 'Lead engineer architecting full-stack digital ecosystems, game server infrastructure, and bot networks.',
+      fullBio: 'Founder of Aurex Studio. Lead Architect with over 6 years of expertise across full-stack web platforms, Minecraft custom engine development, high-concurrency Discord architectures, and enterprise cloud hosting. Focused on high-throughput performance, clean reactive interfaces, and tailored client solutions.',
+      profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+      coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=80',
+      experience: '6+ Years',
+      availability: 'Working',
+      customStatus: 'Building Aurex Studio v2',
+      skills: [
+        { name: 'Full Stack Architecture', level: 'Expert' },
+        { name: 'TypeScript & Node.js', level: 'Expert' },
+        { name: 'Java & PaperMC', level: 'Expert' },
+        { name: 'Discord API', level: 'Expert' },
+        { name: 'Next.js / React', level: 'Advanced' }
+      ],
+      specializations: ['Distributed Systems', 'Game Server Engines', 'Discord Bots', 'Full Stack Web'],
+      technologies: ['TypeScript', 'Next.js', 'Node.js', 'Java', 'PaperMC', 'Redis', 'Docker', 'PostgreSQL'],
+      projectIds: ['proj-1', 'proj-2', 'proj-3', 'proj-4'],
+      socials: [
+        { platform: 'GitHub', username: 'professorx-works', url: 'https://github.com' },
+        { platform: 'Discord', username: 'professorx.works', url: 'https://discord.gg/professorx' },
+        { platform: 'X', username: '@professorx_dev', url: 'https://x.com/professorx_dev' }
+      ],
+      isFeatured: true,
+      isVisible: true,
+      displayOrder: 2,
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-05T00:00:00.000Z'
+    },
+    {
+      id: 'dev-kaelen',
+      username: 'kaelen',
+      name: 'Kaelen Ward',
+      role: 'Minecraft Systems & Engine Specialist',
+      shortBio: 'Designing custom RPG mechanics, PacketEvents optimizations, and scalable server networks.',
+      fullBio: 'Specialist Minecraft engineer with 4+ years of experience authoring high-throughput Paper/Purpur plugins, Skript modular frameworks, custom item models, and database-driven economy engines. Engineered network architectures handling thousands of simultaneous players.',
+      profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+      coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1400&q=80',
+      experience: '4+ Years',
+      availability: 'Available',
+      customStatus: 'Available for plugin and network contracts',
+      skills: [
+        { name: 'Java / Kotlin', level: 'Advanced' },
+        { name: 'Spigot / Paper API', level: 'Expert' },
+        { name: 'NMS & PacketEvents', level: 'Advanced' },
+        { name: 'MySQL & Redis', level: 'Intermediate' },
+        { name: 'Skript Scripting', level: 'Expert' }
+      ],
+      specializations: ['Minecraft Core Development', 'Custom Game Modes', 'Network Optimization'],
+      technologies: ['Java', 'Kotlin', 'PaperMC', 'Gradle', 'Redis', 'PacketEvents', 'Skript'],
+      projectIds: ['proj-2'],
+      socials: [
+        { platform: 'GitHub', username: 'kaelen-mc', url: 'https://github.com' },
+        { platform: 'Discord', username: 'kaelen#7721', url: 'https://discord.com' }
+      ],
+      isFeatured: true,
+      isVisible: true,
+      displayOrder: 3,
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-05T00:00:00.000Z'
+    },
+    {
+      id: 'dev-marcus',
+      username: 'marcus',
+      name: 'Marcus Cole',
+      role: 'Discord Architect & Bot Engineer',
+      shortBio: 'Crafting enterprise Discord bot ecosystems, automated community moderation, and API bridges.',
+      fullBio: 'Backend developer focused on building ultra-low latency Discord bots, community management bots, and payment gateway bridges. Architected bot systems servicing over 100,000 community members with 99.99% uptime.',
+      profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+      coverImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=80',
+      experience: '4+ Years',
+      availability: 'Busy',
+      customStatus: 'Engineering custom bot telemetry cluster',
+      skills: [
+        { name: 'Discord.js & Discord.py', level: 'Expert' },
+        { name: 'Node.js & TypeScript', level: 'Advanced' },
+        { name: 'PostgreSQL & Prisma', level: 'Advanced' },
+        { name: 'WebSockets & Queues', level: 'Advanced' },
+        { name: 'Docker Deployment', level: 'Intermediate' }
+      ],
+      specializations: ['Discord Bot Architecture', 'Payment Bridges', 'Community Automation'],
+      technologies: ['TypeScript', 'Discord.js', 'Node.js', 'PostgreSQL', 'Redis', 'BullMQ', 'Docker'],
+      projectIds: ['proj-3', 'proj-4', 'proj-6'],
+      socials: [
+        { platform: 'GitHub', username: 'marcus-cole', url: 'https://github.com' },
+        { platform: 'X', username: '@marcus_bots', url: 'https://x.com' },
+        { platform: 'Discord', username: 'marcus_dev', url: 'https://discord.com' }
+      ],
+      isFeatured: false,
+      isVisible: true,
+      displayOrder: 4,
+      createdAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-05T00:00:00.000Z'
+    }
+  ],
 };
