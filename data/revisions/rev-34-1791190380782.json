@@ -1,15 +1,15 @@
 {
-  "version": 43,
-  "updatedAt": "2026-10-05T08:56:53.349Z",
+  "version": 34,
+  "updatedAt": "2026-10-05T08:52:51.343Z",
   "siteSettings": {
-    "siteName": "Aurex Studio",
-    "tagline": "Development · Design · Digital Experiences",
+    "siteName": "Professorx Works",
+    "tagline": "Development � Design � Digital Experiences (Verified Single Source of Truth)",
     "logoUrl": "/media/logo.svg",
     "lightLogoUrl": "/media/logo-light.svg",
     "darkLogoUrl": "/media/logo-dark.svg",
     "faviconUrl": "/favicon.ico",
-    "metaTitle": "Aurex Studio — Digital Workspace & Portfolio",
-    "metaDescription": "Digital development workspace, portfolio & services platform of Aurex Studio. Building across Web, Minecraft & Discord.",
+    "metaTitle": "Professorx Works — Digital Workspace & Portfolio",
+    "metaDescription": "Personal professional digital workspace, portfolio & services platform of Professorx. Building across Web, Minecraft & Discord.",
     "ogImageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
     "email": "contact@professorx.works",
     "location": "Remote / Global",
@@ -18,7 +18,7 @@
     "draftModeEnabled": false
   },
   "heroContent": {
-    "title": "Aurex Studio",
+    "title": "Professorx Works",
     "subtitle": "Development · Design · Digital Experiences",
     "statement": "Building digital experiences across Web, Minecraft & Discord.",
     "primaryCtaText": "Explore My Work",
@@ -34,23 +34,23 @@
     "statsBadgeText": "Visitors"
   },
   "workspaceDashboard": {
-    "title": "Explore Aurex Studio Workspace",
-    "badge": "AUREX STUDIO WORKSPACE",
-    "aboutBio": "Aurex Studio is an elite digital engineering and development workspace founded by Professorx, specializing in high-performance web platforms, custom Minecraft network ecosystems, and advanced Discord systems. Every project is crafted with obsessive attention to speed, scalability, and futuristic aesthetic polish.",
+    "title": "Explore My Workspace",
+    "badge": "WORKSPACE COCKPIT v2.4",
+    "aboutBio": "I am Professorx, an engineer and digital craftsman specializing in full-stack web platforms, high-performance Minecraft server architecture, and advanced Discord systems. I treat every project as a finely-tuned engine—blending aesthetic precision with rock-solid reliability.",
     "developerPhilosophy": "Show proof first, engineer for performance, and maintain uncompromising attention to detail across every touchpoint.",
     "currentlyBuilding": {
-      "title": "Aurex Studio v2 — Next-Gen Platform",
-      "subtitle": "Interactive digital flagship featuring high-performance micro-interactions, real-time telemetry, and dynamic database-backed CMS engine.",
+      "title": "Nexus Sync Engine",
+      "subtitle": "Real-time WebSocket bridge synchronizing Minecraft game events, web telemetry, and Discord community roles.",
       "tags": [
         "Next.js 14",
         "TypeScript",
-        "Tailwind CSS",
-        "Framer Motion",
-        "Supabase"
+        "Spigot/Paper API",
+        "Discord.js v14",
+        "Redis"
       ],
-      "progress": 94,
-      "statusText": "Active Production Release",
-      "link": "/works/aurex-studio"
+      "progress": 82,
+      "statusText": "In Active Alpha Testing",
+      "link": "/works/nexus-sync-engine"
     },
     "experienceYears": "6+ Years",
     "completedProjectsCount": "85+",
@@ -226,7 +226,7 @@
     {
       "id": "proj-1",
       "slug": "aurex-studio",
-      "title": "Aurex Studio",
+      "title": "Aurex Studio Creative Platform",
       "category": "Web",
       "shortDescription": "High-conversion design agency portfolio with interactive 3D elements and headless CMS.",
       "fullDescription": "Aurex Studio needed a digital flagship that reflects their high-end brand identity. We engineered a responsive web application featuring custom micro-interactions, buttery-smooth page transitions, real-time client case study filtering, and integrated lead capture.",
@@ -1104,15 +1104,15 @@
     "thisMonthVisitors": 1285,
     "activeVisitors": 1,
     "pageViews": {
-      "/": 1293,
-      "/works": 727,
-      "/services": 611,
+      "/": 1292,
+      "/works": 726,
+      "/services": 609,
       "/services/web-development": 283,
       "/services/minecraft-development": 144,
       "/services/discord-development": 88,
       "/services/discord-bots": 94,
-      "/faq": 168,
-      "/contact": 221,
+      "/faq": 167,
+      "/contact": 218,
       "/works/aurex-studio": 2,
       "/works/vortex-sentinel-bot": 1
     },
@@ -1122,7 +1122,7 @@
       "Minecraft Development": 39,
       "Discord Development": 24
     },
-    "lastUpdated": "2026-10-05T08:56:53.349Z"
+    "lastUpdated": "2026-10-05T08:52:51.343Z"
   },
   "sessions": [
     {
@@ -1134,7 +1134,7 @@
     {
       "sessionId": "sess_5931b465ef02a6d463bedd2c842e1a73",
       "ipHash": "837ec5754f50",
-      "lastSeen": 1791190613348,
+      "lastSeen": 1791190371343,
       "createdAt": 1791189531347
     }
   ]

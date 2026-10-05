@@ -118,7 +118,7 @@ export function WorkspaceDashboard({
                 <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
               <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-                professorx@workspace:~$
+                aurex@workspace:~$
               </span>
             </div>
 
@@ -167,7 +167,7 @@ export function WorkspaceDashboard({
                   <div className="space-y-6 lg:col-span-2">
                     <div>
                       <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        About Professorx
+                        About Aurex Studio
                       </h3>
                       <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
                         {dashboard.aboutBio}

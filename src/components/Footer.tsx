@@ -13,7 +13,7 @@ interface FooterProps {
 }
 
 export function Footer({
-  siteName = 'Professorx Works',
+  siteName = 'Aurex Studio',
   tagline = 'Development · Design · Digital Experiences',
   socials = [],
   availability = 'available',

@@ -12,7 +12,7 @@ interface NavbarProps {
   logoUrl?: string;
 }
 
-export function Navbar({ siteName = 'Professorx Works', tagline }: NavbarProps) {
+export function Navbar({ siteName = 'Aurex Studio', tagline }: NavbarProps) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);

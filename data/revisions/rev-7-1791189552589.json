@@ -1,9 +1,9 @@
 {
-  "version": 1,
-  "updatedAt": "2026-10-05T08:19:25.522Z",
+  "version": 7,
+  "updatedAt": "2026-10-05T08:38:51.347Z",
   "siteSettings": {
     "siteName": "Professorx Works",
-    "tagline": "Development · Design · Digital Experiences",
+    "tagline": "Development � Design � Digital Experiences (Verified Single Source of Truth)",
     "logoUrl": "/media/logo.svg",
     "lightLogoUrl": "/media/logo-light.svg",
     "darkLogoUrl": "/media/logo-dark.svg",
@@ -489,7 +489,7 @@
         {
           "id": "plan-w1",
           "name": "Starter Flagship",
-          "price": "₹10,000",
+          "price": "₹12,500",
           "period": "One-time",
           "currency": "INR",
           "description": "Perfect for creators, personal portfolios, and single-page business landing sites.",
@@ -926,6 +926,16 @@
   ],
   "feedback": [
     {
+      "id": "fb-1791188667563",
+      "name": "Test Visitor",
+      "role": "Beta Tester",
+      "rating": 5,
+      "comment": "Incredible craft and attention to detail!",
+      "status": "pending",
+      "isFeatured": false,
+      "createdAt": "2026-10-05T08:24:27.563Z"
+    },
+    {
       "id": "fb-1",
       "name": "Alex Vance",
       "role": "Founder, Vortex Media",
@@ -967,6 +977,19 @@
     }
   ],
   "contactRequests": [
+    {
+      "id": "cr-1791188675334",
+      "name": "Elysian Gaming",
+      "email": "owner@elysiangaming.net",
+      "handle": "elysian#0001",
+      "serviceId": "",
+      "serviceName": "Minecraft Development",
+      "budgetRange": "?25,000 - ?50,000",
+      "timeline": "2-3 Weeks",
+      "message": "Need custom Skript systems and network architecture for our 200+ player SMP.",
+      "status": "New",
+      "createdAt": "2026-10-05T08:24:35.334Z"
+    },
     {
       "id": "cr-1",
       "name": "David Sterling",
@@ -1065,13 +1088,13 @@
     }
   ],
   "visitorMetrics": {
-    "totalVisitors": 1284,
-    "todayVisitors": 94,
-    "thisWeekVisitors": 412,
-    "thisMonthVisitors": 1284,
-    "activeVisitors": 7,
+    "totalVisitors": 1285,
+    "todayVisitors": 95,
+    "thisWeekVisitors": 413,
+    "thisMonthVisitors": 1285,
+    "activeVisitors": 1,
     "pageViews": {
-      "/": 1284,
+      "/": 1285,
       "/works": 721,
       "/services": 608,
       "/services/web-development": 282,
@@ -1087,7 +1110,7 @@
       "Minecraft Development": 39,
       "Discord Development": 24
     },
-    "lastUpdated": "2026-10-05T08:19:25.529Z"
+    "lastUpdated": "2026-10-05T08:38:51.347Z"
   },
   "sessions": [
     {
@@ -1095,6 +1118,12 @@
       "ipHash": "hash-abc-1",
       "lastSeen": 1791188305529,
       "createdAt": 1791188245529
+    },
+    {
+      "sessionId": "sess_5931b465ef02a6d463bedd2c842e1a73",
+      "ipHash": "837ec5754f50",
+      "lastSeen": 1791189531347,
+      "createdAt": 1791189531347
     }
   ]
 }
