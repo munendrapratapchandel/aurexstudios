@@ -1,6 +1,6 @@
 {
-  "version": 126,
-  "updatedAt": "2026-10-05T14:10:51.551Z",
+  "version": 127,
+  "updatedAt": "2026-10-05T14:39:44.414Z",
   "siteSettings": {
     "siteName": "Aurex Studio",
     "tagline": "Development · Design · Digital Experiences",
@@ -1552,5 +1552,12 @@
     ],
     "formSuccessTitle": "Inquiry Received!",
     "formSuccessMessage": "Thank you for reaching out. We will review your project scope and get back to you with an architectural proposal within 24 hours."
+  },
+  "supabaseConfig": {
+    "url": "https://acbvmieuqszvsibyxhwp.supabase.co",
+    "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYnZtaWV1cXN6dnNpYnl4aHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDY0MzQsImV4cCI6MjEwNjc4MjQzNH0.CYvYC9hfCSthquCQP4Hg46DiPQMutBSGrkTEET_rAz4",
+    "serviceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYnZtaWV1cXN6dnNpYnl4aHdwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTIwNjQzNCwiZXhwIjoyMTA2NzgyNDM0fQ.2g9hgqMrHy-Rg0MQP6pBbLzDlfElgJqRK-elemS76zg",
+    "storageBucket": "aurex-media",
+    "autoSync": true
   }
 }

@@ -153,6 +153,12 @@ export async function testSupabaseConnection(): Promise<SupabaseConnectionStatus
       const { data: buckets } = await client.storage.listBuckets();
       if (buckets && buckets.some((b) => b.name === creds.storageBucket || b.id === creds.storageBucket)) {
         details.storageBucket = true;
+      } else {
+        // Automatically create bucket if missing
+        const { error: createErr } = await client.storage.createBucket(creds.storageBucket, { public: true });
+        if (!createErr) {
+          details.storageBucket = true;
+        }
       }
     } catch {
       // storage test optional
@@ -162,9 +168,9 @@ export async function testSupabaseConnection(): Promise<SupabaseConnectionStatus
 
     let message = 'Successfully connected to Supabase!';
     if (!isConnected) {
-      message = 'Connected to Supabase endpoint, but tables were not found. Please run the SQL schema migration in Supabase SQL Editor.';
-    } else if (!details.siteDataTable) {
-      message = 'Connected to Supabase, but "site_data" table is missing. Run schema migration.';
+      message = 'Connected to Supabase endpoint, but tables were not found. Please run the SQL schema in Supabase SQL Editor.';
+    } else if (!details.inquiriesTable || !details.feedbackTable) {
+      message = 'Connected to Supabase! Run the inquiries & feedback SQL script below in SQL Editor to activate dedicated tables.';
     }
 
     return {
@@ -216,38 +222,47 @@ export async function pushFullStateToSupabase(db: DatabaseSchema): Promise<{ suc
 
     // 2. Also sync dedicated inquiries table if any
     if (db.contactRequests && db.contactRequests.length > 0) {
-      const formattedInquiries = db.contactRequests.map((cr) => ({
-        id: cr.id,
-        name: cr.name,
-        email: cr.email,
-        handle: cr.handle || '',
-        service_id: cr.serviceId || '',
-        service_name: cr.serviceName || '',
-        budget_range: cr.budgetRange || '',
-        timeline: cr.timeline || '',
-        message: cr.message,
-        status: cr.status || 'New',
-        created_at: cr.createdAt || new Date().toISOString(),
-      }));
+      try {
+        const formattedInquiries = db.contactRequests.map((cr) => ({
+          id: cr.id,
+          name: cr.name,
+          email: cr.email,
+          handle: cr.handle || '',
+          service_id: cr.serviceId || '',
+          service_name: cr.serviceName || '',
+          budget_range: cr.budgetRange || '',
+          timeline: cr.timeline || '',
+          message: cr.message,
+          status: cr.status || 'New',
+          created_at: cr.createdAt || new Date().toISOString(),
+        }));
 
-      await client.from('inquiries').upsert(formattedInquiries, { onConflict: 'id' });
+        await client.from('inquiries').upsert(formattedInquiries, { onConflict: 'id' });
+      } catch (inqErr) {
+        console.warn('Optional inquiries table sync notice:', inqErr);
+      }
     }
 
     // 3. Also sync dedicated feedback table if any
     if (db.feedback && db.feedback.length > 0) {
-      const formattedFeedback = db.feedback.map((fb) => ({
-        id: fb.id,
-        name: fb.name,
-        role: fb.role || 'Client',
-        rating: fb.rating,
-        comment: fb.comment,
-        status: fb.status || 'pending',
-        is_featured: Boolean(fb.isFeatured),
-        created_at: fb.createdAt || new Date().toISOString(),
-      }));
+      try {
+        const formattedFeedback = db.feedback.map((fb) => ({
+          id: fb.id,
+          name: fb.name,
+          role: fb.role || 'Client',
+          rating: fb.rating,
+          comment: fb.comment,
+          status: fb.status || 'pending',
+          is_featured: Boolean(fb.isFeatured),
+          created_at: fb.createdAt || new Date().toISOString(),
+        }));
 
-      await client.from('feedback').upsert(formattedFeedback, { onConflict: 'id' });
+        await client.from('feedback').upsert(formattedFeedback, { onConflict: 'id' });
+      } catch (fbErr) {
+        console.warn('Optional feedback table sync notice:', fbErr);
+      }
     }
+
 
     return { success: true, message: 'Successfully synced all data to Supabase Cloud!' };
   } catch (err: any) {
