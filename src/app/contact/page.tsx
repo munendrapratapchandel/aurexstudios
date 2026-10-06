@@ -4,6 +4,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { VisitorTracker } from '@/components/VisitorTracker';
 import { ContactForm } from '@/components/ContactForm';
+import { DiscordTicketCard } from '@/components/DiscordTicketCard';
 import {
   Sparkles,
   MessageSquare,
@@ -60,6 +61,14 @@ export default async function ContactPage() {
 
       <main className="pt-28 pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Fast Project Build / Discord Ticket Card */}
+          <div className="mb-10">
+            <DiscordTicketCard
+              config={contactContent.discordTicketCard}
+              fallbackUrl={discordUrl}
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
             {/* Left Column */}
             <div className="space-y-6 lg:col-span-5">

@@ -39,6 +39,7 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
+  X,
   Star,
   Activity,
   Upload,
@@ -65,7 +66,9 @@ import {
   RefreshCw,
   Key,
   HardDrive,
+  Download,
 } from 'lucide-react';
+import { DiscordTicketCard } from '@/components/DiscordTicketCard';
 
 interface AdminDashboardProps {
   initialData: DatabaseSchema;
@@ -86,6 +89,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
     | 'contact'
     | 'faqs'
     | 'socials'
+    | 'social-embed'
     | 'media'
     | 'analytics'
     | 'settings'
@@ -124,11 +128,13 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
   // Client inquiries filter
   const [requestFilter, setRequestFilter] = useState<'All' | 'New' | 'Accepted' | 'Declined' | 'In Progress'>('All');
 
-  // Favicon & Logo upload states
+  // Favicon, Logo & OG Image upload states
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingLightLogo, setUploadingLightLogo] = useState(false);
   const [uploadingDarkLogo, setUploadingDarkLogo] = useState(false);
+  const [uploadingOgImage, setUploadingOgImage] = useState(false);
+  const [embedPlatform, setEmbedPlatform] = useState<'discord' | 'twitter' | 'whatsapp'>('discord');
 
   // Supabase Cloud states
   const [supabaseLoading, setSupabaseLoading] = useState(false);
@@ -140,6 +146,79 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
   const [supabaseAutoSync, setSupabaseAutoSync] = useState(true);
   const [supabaseSqlSchema, setSupabaseSqlSchema] = useState('');
   const [sqlCopied, setSqlCopied] = useState(false);
+
+  // Visitor Telemetry & Sessions management state
+  const [visitorSessions, setVisitorSessions] = useState<
+    { sessionId: string; ipHash: string; lastSeen: number; createdAt: number }[]
+  >((initialData as any).sessions || []);
+  const [loadingVisitors, setLoadingVisitors] = useState(false);
+  const [targetVisitorCount, setTargetVisitorCount] = useState<string>(
+    String(initialData.visitorMetrics?.totalVisitors || 0)
+  );
+  const [newTicketFeature, setNewTicketFeature] = useState('');
+
+  const loadVisitorData = async () => {
+    setLoadingVisitors(true);
+    try {
+      const res = await fetch('/api/admin/visitors');
+      const json = await res.json();
+      if (json.success) {
+        if (json.metrics) {
+          setData((prev) => ({ ...prev, visitorMetrics: json.metrics }));
+          setTargetVisitorCount(String(json.metrics.totalVisitors));
+        }
+        if (json.sessions) {
+          setVisitorSessions(json.sessions);
+        }
+        showToast('Visitor telemetry synced!');
+      }
+    } catch (err: any) {
+      alert('Error fetching visitor telemetry: ' + err.message);
+    } finally {
+      setLoadingVisitors(false);
+    }
+  };
+
+  const handleVisitorAction = async (action: string, payload: any = {}) => {
+    setLoadingVisitors(true);
+    try {
+      const res = await fetch('/api/admin/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Action failed');
+      if (json.metrics) {
+        setData((prev) => ({ ...prev, visitorMetrics: json.metrics }));
+        setTargetVisitorCount(String(json.metrics.totalVisitors));
+      }
+      if (json.sessions) {
+        setVisitorSessions(json.sessions);
+      }
+      showToast(json.message || 'Action executed successfully');
+    } catch (err: any) {
+      alert('Visitor action failed: ' + err.message);
+    } finally {
+      setLoadingVisitors(false);
+    }
+  };
+
+  const exportVisitorTelemetry = () => {
+    const exportData = {
+      visitorMetrics: data.visitorMetrics,
+      sessions: visitorSessions,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aurex-visitor-telemetry-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Telemetry exported successfully');
+  };
 
 
   const showToast = (msg: string) => {
@@ -395,10 +474,10 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
     }
   };
 
-  // 3c. Site Assets Upload (Favicon & System Logos)
+  // 3c. Site Assets Upload (Favicon, System Logos & Social OG Image)
   const handleSiteAssetUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: 'faviconUrl' | 'logoUrl' | 'lightLogoUrl' | 'darkLogoUrl'
+    field: 'faviconUrl' | 'logoUrl' | 'lightLogoUrl' | 'darkLogoUrl' | 'ogImageUrl'
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -407,6 +486,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
     else if (field === 'logoUrl') setUploadingLogo(true);
     else if (field === 'lightLogoUrl') setUploadingLightLogo(true);
     else if (field === 'darkLogoUrl') setUploadingDarkLogo(true);
+    else if (field === 'ogImageUrl') setUploadingOgImage(true);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -433,7 +513,13 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
 
       // Automatically persist to database!
       await saveContentChanges({ siteSettings: updatedSettings });
-      showToast(`${field === 'faviconUrl' ? 'Favicon' : 'Logo'} uploaded and updated!`);
+      showToast(
+        field === 'ogImageUrl'
+          ? 'Social embed preview banner uploaded and updated!'
+          : field === 'faviconUrl'
+          ? 'Favicon uploaded and updated!'
+          : 'Logo uploaded and updated!'
+      );
     } catch (err: any) {
       alert('Upload failed: ' + err.message);
     } finally {
@@ -441,6 +527,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
       else if (field === 'logoUrl') setUploadingLogo(false);
       else if (field === 'lightLogoUrl') setUploadingLightLogo(false);
       else if (field === 'darkLogoUrl') setUploadingDarkLogo(false);
+      else if (field === 'ogImageUrl') setUploadingOgImage(false);
       e.target.value = '';
     }
   };
@@ -783,8 +870,9 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
               { id: 'contact', label: 'Contact Section', icon: MessageSquare },
               { id: 'faqs', label: 'FAQ Manager', icon: HelpCircle },
               { id: 'socials', label: 'Socials & Hobbies', icon: Share2 },
+              { id: 'social-embed', label: 'Social Share & Embed', icon: ExternalLink, badge: 'OG' },
               { id: 'media', label: 'Media Library', icon: Image },
-              { id: 'analytics', label: 'Visitor Telemetry', icon: BarChart3 },
+              { id: 'analytics', label: 'Visitors & Traffic', icon: BarChart3, badge: data.visitorMetrics?.activeVisitors ? `${data.visitorMetrics.activeVisitors} live` : undefined },
               { id: 'settings', label: 'Branding & SEO', icon: Settings },
               { id: 'supabase', label: 'Supabase Cloud', icon: Database, badge: supabaseStatus?.isConnected ? '🟢' : 'Cloud' },
               { id: 'revisions', label: 'Version Revisions', icon: History },
@@ -798,6 +886,7 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                     setActiveTab(item.id as any);
                     if (item.id === 'revisions') loadRevisions();
                     if (item.id === 'supabase') loadSupabaseInfo();
+                    if (item.id === 'analytics') loadVisitorData();
                   }}
                   className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all ${
                     isActive
@@ -810,7 +899,15 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                     <span>{item.label}</span>
                   </div>
                   {Boolean(item.badge) && (
-                    <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        item.id === 'analytics'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : item.id === 'social-embed'
+                          ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                          : 'bg-red-500 text-white'
+                      }`}
+                    >
                       {item.badge}
                     </span>
                   )}
@@ -4522,6 +4619,350 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
               </div>
             </div>
 
+            {/* 3.5 FAST PROJECT BUILD & DISCORD TICKET CARD */}
+            <div className="rounded-3xl border border-[#5865F2]/30 bg-gradient-to-br from-[#5865F2]/10 via-[#0e111a] to-[#0e111a] p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-[#8894FF] fill-[#8894FF]" />
+                    <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+                      3.5 Fast Project Build & Discord Ticket Card
+                    </h3>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    High-impact promotional card displayed on the Contact page & homepage prompting urgent clients to join Discord and create an expedited project ticket.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer rounded-xl border border-white/10 bg-[#141824] px-3.5 py-1.5 text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={data.contactContent?.discordTicketCard?.enabled !== false}
+                      onChange={(e) => {
+                        setData({
+                          ...data,
+                          contactContent: {
+                            ...(data.contactContent || ({} as any)),
+                            discordTicketCard: {
+                              ...(data.contactContent?.discordTicketCard || {
+                                enabled: true,
+                                badge: '⚡ FAST-TRACK YOUR PROJECT',
+                                title: 'Need a Faster Project Build? Join Discord & Create a Ticket',
+                                description: 'Skip email delays and inquiry queues. Join our official Discord server, open a private project ticket, and collaborate directly with our lead developers for instant scoping and expedited delivery.',
+                                discordUrl: data.contactContent?.directDiscordUrl || 'https://discord.gg/aurex',
+                                buttonText: 'Join Discord & Open Ticket',
+                                responseTime: '< 15 Mins Response',
+                                features: [
+                                  'Instant 1-on-1 access to lead developers',
+                                  'Private dedicated ticket channel for your build',
+                                  'Real-time sprint updates & interactive previews',
+                                  'Priority delivery queue for urgent builds',
+                                ],
+                              }),
+                              enabled: e.target.checked,
+                            },
+                          },
+                        });
+                      }}
+                      className="rounded accent-sky-500"
+                    />
+                    <span className="font-semibold text-xs">
+                      {data.contactContent?.discordTicketCard?.enabled !== false ? 'Card Active (Visible)' : 'Card Disabled (Hidden)'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Form fields for discordTicketCard */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Badge Pill Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.discordTicketCard?.badge || '⚡ FAST-TRACK YOUR PROJECT'}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          discordTicketCard: {
+                            ...(data.contactContent?.discordTicketCard || ({} as any)),
+                            badge: e.target.value,
+                          },
+                        },
+                      });
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Response Time Pill
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.discordTicketCard?.responseTime || '< 15 Mins Response'}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          discordTicketCard: {
+                            ...(data.contactContent?.discordTicketCard || ({} as any)),
+                            responseTime: e.target.value,
+                          },
+                        },
+                      });
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Headline / Title
+                </label>
+                <input
+                  type="text"
+                  value={data.contactContent?.discordTicketCard?.title || 'Need a Faster Project Build? Join Discord & Create a Ticket'}
+                  onChange={(e) => {
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        discordTicketCard: {
+                          ...(data.contactContent?.discordTicketCard || ({} as any)),
+                          title: e.target.value,
+                        },
+                      },
+                    });
+                  }}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Description Paragraph
+                </label>
+                <textarea
+                  rows={3}
+                  value={data.contactContent?.discordTicketCard?.description || 'Skip email delays and inquiry queues. Join our official Discord server, open a private project ticket, and collaborate directly with our lead developers for instant scoping and expedited delivery.'}
+                  onChange={(e) => {
+                    setData({
+                      ...data,
+                      contactContent: {
+                        ...(data.contactContent || ({} as any)),
+                        discordTicketCard: {
+                          ...(data.contactContent?.discordTicketCard || ({} as any)),
+                          description: e.target.value,
+                        },
+                      },
+                    });
+                  }}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Discord Server / Ticket Link
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.discordTicketCard?.discordUrl || 'https://discord.gg/aurex'}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          discordTicketCard: {
+                            ...(data.contactContent?.discordTicketCard || ({} as any)),
+                            discordUrl: e.target.value,
+                          },
+                        },
+                      });
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Button Action Text
+                  </label>
+                  <input
+                    type="text"
+                    value={data.contactContent?.discordTicketCard?.buttonText || 'Join Discord & Open Ticket'}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        contactContent: {
+                          ...(data.contactContent || ({} as any)),
+                          discordTicketCard: {
+                            ...(data.contactContent?.discordTicketCard || ({} as any)),
+                            buttonText: e.target.value,
+                          },
+                        },
+                      });
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+
+              {/* Features / Benefits manager */}
+              <div className="space-y-3">
+                <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                  Card Highlights & Perks
+                </label>
+                <div className="space-y-2">
+                  {(data.contactContent?.discordTicketCard?.features || [
+                    'Instant 1-on-1 access to lead developers',
+                    'Private dedicated ticket channel for your build',
+                    'Real-time sprint updates & interactive previews',
+                    'Priority delivery queue for urgent builds',
+                  ]).map((feat, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={feat}
+                        onChange={(e) => {
+                          const feats = [
+                            ...(data.contactContent?.discordTicketCard?.features || [
+                              'Instant 1-on-1 access to lead developers',
+                              'Private dedicated ticket channel for your build',
+                              'Real-time sprint updates & interactive previews',
+                              'Priority delivery queue for urgent builds',
+                            ]),
+                          ];
+                          feats[fIdx] = e.target.value;
+                          setData({
+                            ...data,
+                            contactContent: {
+                              ...(data.contactContent || ({} as any)),
+                              discordTicketCard: {
+                                ...(data.contactContent?.discordTicketCard || ({} as any)),
+                                features: feats,
+                              },
+                            },
+                          });
+                        }}
+                        className="flex-1 rounded-xl border border-white/10 bg-[#141824] px-3 py-2 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const feats = (
+                            data.contactContent?.discordTicketCard?.features || []
+                          ).filter((_, idx) => idx !== fIdx);
+                          setData({
+                            ...data,
+                            contactContent: {
+                              ...(data.contactContent || ({} as any)),
+                              discordTicketCard: {
+                                ...(data.contactContent?.discordTicketCard || ({} as any)),
+                                features: feats,
+                              },
+                            },
+                          });
+                        }}
+                        className="rounded-lg p-2 text-red-400 hover:bg-red-500/10 transition"
+                        title="Delete feature"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Add a new perk (e.g. 24/7 dedicated lead engineer)..."
+                      value={newTicketFeature}
+                      onChange={(e) => setNewTicketFeature(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newTicketFeature.trim()) {
+                            const feats = [
+                              ...(data.contactContent?.discordTicketCard?.features || [
+                                'Instant 1-on-1 access to lead developers',
+                                'Private dedicated ticket channel for your build',
+                                'Real-time sprint updates & interactive previews',
+                                'Priority delivery queue for urgent builds',
+                              ]),
+                              newTicketFeature.trim(),
+                            ];
+                            setData({
+                              ...data,
+                              contactContent: {
+                                ...(data.contactContent || ({} as any)),
+                                discordTicketCard: {
+                                  ...(data.contactContent?.discordTicketCard || ({} as any)),
+                                  features: feats,
+                                },
+                              },
+                            });
+                            setNewTicketFeature('');
+                          }
+                        }
+                      }}
+                      className="flex-1 rounded-xl border border-white/10 bg-[#141824] px-3 py-2 text-xs text-white outline-none focus:border-sky-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newTicketFeature.trim()) {
+                          const feats = [
+                            ...(data.contactContent?.discordTicketCard?.features || [
+                              'Instant 1-on-1 access to lead developers',
+                              'Private dedicated ticket channel for your build',
+                              'Real-time sprint updates & interactive previews',
+                              'Priority delivery queue for urgent builds',
+                            ]),
+                            newTicketFeature.trim(),
+                          ];
+                          setData({
+                            ...data,
+                            contactContent: {
+                              ...(data.contactContent || ({} as any)),
+                              discordTicketCard: {
+                                ...(data.contactContent?.discordTicketCard || ({} as any)),
+                                features: feats,
+                              },
+                            },
+                          });
+                          setNewTicketFeature('');
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 rounded-xl bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-500 hover:text-white transition"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add Perk</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Preview */}
+              <div className="pt-2">
+                <span className="block text-[11px] font-mono text-slate-400 uppercase mb-2">
+                  Live Preview on Site:
+                </span>
+                <DiscordTicketCard
+                  config={data.contactContent?.discordTicketCard}
+                  fallbackUrl={data.contactContent?.directDiscordUrl}
+                />
+              </div>
+            </div>
+
             {/* 4. FORM OPTIONS & DROPDOWNS */}
             <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
@@ -4890,6 +5331,404 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
           </div>
         )}
 
+        {/* TAB: SOCIAL SHARE & EMBED CMS (Open Graph & Discord Previews) */}
+        {activeTab === 'social-embed' && (
+          <div className="p-8 max-w-7xl space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                    <ExternalLink className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-2xl font-bold tracking-tight text-white">
+                    Social Share & Link Embed CMS
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Customize the exact photo banner, heading title, and description that appear when your website link is shared on Discord, WhatsApp, Twitter/X, Telegram, and iMessage.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const testUrl = typeof window !== 'undefined' ? `${window.location.origin}/?v=${Date.now()}` : 'https://aurex-studio-live.vercel.app/';
+                    navigator.clipboard.writeText(testUrl);
+                    showToast('Copied test link with cache-buster!');
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#121520] px-4 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>Copy Test Link</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => saveContentChanges({ siteSettings: data.siteSettings })}
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{saving ? 'Publishing Embed...' : 'Save & Publish Embed'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* LEFT COLUMN: Controls & Photo Upload (7 Columns) */}
+              <div className="lg:col-span-7 space-y-6">
+                {/* 1. PHOTO BANNER UPLOAD */}
+                <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-5">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <Image className="h-4 w-4 text-sky-400" />
+                        <span>Embed Photo / Social Preview Banner</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        The large hero image displayed in Discord, Twitter, and WhatsApp link previews.
+                      </p>
+                    </div>
+                    <span className="font-mono text-[10px] text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                      1200 × 630 px
+                    </span>
+                  </div>
+
+                  {/* Upload Box */}
+                  <div className="space-y-4">
+                    <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-sky-500/30 hover:border-sky-500/60 rounded-2xl bg-sky-500/5 hover:bg-sky-500/10 cursor-pointer transition-all">
+                      <Upload className="h-8 w-8 text-sky-400 mb-2" />
+                      <span className="text-xs font-semibold text-white">
+                        {uploadingOgImage ? 'Uploading Image to Supabase Cloud CDN...' : 'Click or Drag to Upload Embed Photo'}
+                      </span>
+                      <span className="text-[11px] text-slate-400 mt-1 text-center">
+                        Supports PNG, JPG, WEBP, GIF. Automatically saved & hosted permanently on Supabase Storage.
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingOgImage}
+                        onChange={(e) => handleSiteAssetUpload(e, 'ogImageUrl')}
+                      />
+                    </label>
+
+                    <div>
+                      <label className="text-[11px] font-mono text-slate-400 uppercase">
+                        Direct Image URL (or paste custom link)
+                      </label>
+                      <input
+                        type="text"
+                        value={data.siteSettings.ogImageUrl || ''}
+                        onChange={(e) =>
+                          setData({
+                            ...data,
+                            siteSettings: { ...data.siteSettings, ogImageUrl: e.target.value },
+                          })
+                        }
+                        placeholder="https://..."
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div>
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1.5">
+                        Quick Preset Banners:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          {
+                            label: 'Abstract Aurex Wave (Default)',
+                            url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+                          },
+                          {
+                            label: 'Cyber Workspace',
+                            url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+                          },
+                          {
+                            label: 'Aurex Studio Logo on Dark',
+                            url: 'https://acbvmieuqszvsibyxhwp.supabase.co/storage/v1/object/public/aurex-media/1791205366955-Aurex.png',
+                          },
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() =>
+                              setData({
+                                ...data,
+                                siteSettings: { ...data.siteSettings, ogImageUrl: preset.url },
+                              })
+                            }
+                            className="rounded-lg border border-white/10 bg-[#141824] px-2.5 py-1 text-[11px] text-slate-300 hover:border-sky-500/50 hover:text-white"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. HEADING & TITLE */}
+                <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-sky-400" />
+                      <span>Embed Heading / Title</span>
+                    </h3>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {(data.siteSettings.metaTitle || '').length} / 70 characters
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    The prominent headline shown in blue bold text at the top of the Discord embed.
+                  </p>
+                  <input
+                    type="text"
+                    value={data.siteSettings.metaTitle || ''}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        siteSettings: { ...data.siteSettings, metaTitle: e.target.value },
+                      })
+                    }
+                    placeholder="Aurex Studio — Digital Workspace"
+                    className="w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500 font-medium"
+                  />
+                </div>
+
+                {/* 3. DESCRIPTION */}
+                <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-sky-400" />
+                      <span>Embed Description</span>
+                    </h3>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {(data.siteSettings.metaDescription || '').length} / 200 characters
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    The summary text shown directly below the heading in Discord, WhatsApp, and Telegram.
+                  </p>
+                  <textarea
+                    rows={3}
+                    value={data.siteSettings.metaDescription || ''}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        siteSettings: { ...data.siteSettings, metaDescription: e.target.value },
+                      })
+                    }
+                    placeholder="Digital development workspace, portfolio & services platform of Aurex Studio. Building across Web, Minecraft & Discord."
+                    className="w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500 leading-relaxed"
+                  />
+                </div>
+
+                {/* 4. BRAND & CANONICAL DETAILS */}
+                <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-4">
+                  <h3 className="text-base font-bold text-white">Brand & Site Identity</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-mono text-slate-400 uppercase">Site Name</label>
+                      <input
+                        type="text"
+                        value={data.siteSettings.siteName || ''}
+                        onChange={(e) =>
+                          setData({
+                            ...data,
+                            siteSettings: { ...data.siteSettings, siteName: e.target.value },
+                          })
+                        }
+                        placeholder="Aurex Studio"
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-mono text-slate-400 uppercase">Tagline</label>
+                      <input
+                        type="text"
+                        value={data.siteSettings.tagline || ''}
+                        onChange={(e) =>
+                          setData({
+                            ...data,
+                            siteSettings: { ...data.siteSettings, tagline: e.target.value },
+                          })
+                        }
+                        placeholder="Development · Design · Digital Experiences"
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Save Bar */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => saveContentChanges({ siteSettings: data.siteSettings })}
+                    className="flex items-center gap-2 rounded-xl bg-sky-500 px-8 py-3.5 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{saving ? 'Publishing Changes...' : 'Save & Publish Social Embed'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: Live Interactive Social Embed Preview (5 Columns) */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="sticky top-6 rounded-3xl border border-white/10 bg-[#0e111a] p-6 space-y-5">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-sky-400" />
+                        <span>Live Embed Preview</span>
+                      </h3>
+                      <span className="text-[11px] text-slate-400">
+                        Exact replica of social app scrapers
+                      </span>
+                    </div>
+
+                    {/* Preview Platform Switcher */}
+                    <div className="flex items-center rounded-xl bg-[#141824] p-1 border border-white/10 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setEmbedPlatform('discord')}
+                        className={`rounded-lg px-2.5 py-1 font-semibold transition-all ${
+                          embedPlatform === 'discord'
+                            ? 'bg-sky-500 text-white'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Discord
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEmbedPlatform('twitter')}
+                        className={`rounded-lg px-2.5 py-1 font-semibold transition-all ${
+                          embedPlatform === 'twitter'
+                            ? 'bg-sky-500 text-white'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Twitter / X
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1. DISCORD EMBED REPLICA (Exact match of user uploaded screenshot) */}
+                  {embedPlatform === 'discord' && (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl bg-[#1e1f22] p-4 text-slate-200 border border-black/40 shadow-inner">
+                        {/* URL Line with Dismiss X */}
+                        <div className="flex items-center justify-between text-xs font-normal text-[#00a8fc] pb-2">
+                          <span className="hover:underline cursor-pointer truncate">
+                            https://aurex-studio-live.vercel.app/
+                          </span>
+                          <button
+                            type="button"
+                            className="text-[#949ba4] hover:text-white p-0.5"
+                            title="Dismiss preview"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Discord Embed Container */}
+                        <div className="rounded-lg bg-[#2b2d31] p-3.5 border-l-[4px] border-[#5865f2] space-y-2">
+                          {/* Heading Link */}
+                          <h4 className="text-sm font-bold text-[#00a8fc] hover:underline cursor-pointer leading-snug">
+                            {data.siteSettings.metaTitle || `${data.siteSettings.siteName || 'Aurex Studio'} — Digital Workspace`}
+                          </h4>
+
+                          {/* Description */}
+                          <p className="text-xs text-[#dbdee1] leading-relaxed">
+                            {data.siteSettings.metaDescription ||
+                              'Digital development workspace, portfolio & services platform of Aurex Studio. Building across Web, Minecraft & Discord.'}
+                          </p>
+
+                          {/* Banner Image */}
+                          <div className="mt-3 overflow-hidden rounded-md border border-black/20 bg-black/40">
+                            <img
+                              src={
+                                data.siteSettings.ogImageUrl ||
+                                'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80'
+                              }
+                              alt="Discord Card Banner"
+                              className="w-full object-cover max-h-60"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src =
+                                  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 text-[11px] text-sky-300 space-y-1">
+                        <div className="font-semibold text-white flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+                          <span>How to verify on Discord:</span>
+                        </div>
+                        <p className="leading-relaxed text-slate-300">
+                          Discord caches link previews aggressively. After clicking <strong>Save & Publish</strong>, test by pasting your link into Discord with a new query parameter like:
+                        </p>
+                        <code className="block rounded bg-black/50 p-2 font-mono text-sky-400 text-[10px] select-all">
+                          https://aurex-studio-live.vercel.app/?v={data.version || 1}
+                        </code>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. TWITTER / X SUMMARY CARD */}
+                  {embedPlatform === 'twitter' && (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl bg-black border border-white/15 overflow-hidden text-slate-200">
+                        {/* Twitter Banner Image on Top */}
+                        <div className="relative aspect-[1.91/1] w-full overflow-hidden bg-slate-900">
+                          <img
+                            src={
+                              data.siteSettings.ogImageUrl ||
+                              'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80'
+                            }
+                            alt="Twitter Card Preview"
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src =
+                                'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
+                            }}
+                          />
+                        </div>
+
+                        {/* Text Container */}
+                        <div className="p-3.5 space-y-1 bg-[#16181c]">
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            aurex-studio-live.vercel.app
+                          </span>
+                          <h4 className="text-sm font-bold text-white leading-snug">
+                            {data.siteSettings.metaTitle || `${data.siteSettings.siteName || 'Aurex Studio'} — Digital Workspace`}
+                          </h4>
+                          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                            {data.siteSettings.metaDescription ||
+                              'Digital development workspace, portfolio & services platform of Aurex Studio. Building across Web, Minecraft & Discord.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-[11px] text-slate-300">
+                        <span>Twitter & X Card Type: </span>
+                        <code className="text-sky-400 font-mono">summary_large_image</code> (Optimal high-resolution preview).
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB 9: MEDIA MANAGER (Requirement #46) */}
         {activeTab === 'media' && (
           <div className="p-8 space-y-8">
@@ -4965,73 +5804,436 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
         )}
 
         {/* TAB 10: ANALYTICS & TELEMETRY (Requirement #53) */}
+        {/* TAB 10: VISITORS & TRAFFIC MANAGEMENT (Comprehensive Telemetry & Control Suite) */}
         {activeTab === 'analytics' && (
-          <div className="p-8 space-y-8 max-w-4xl">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-white">
-                Visitor Telemetry & Analytics
-              </h2>
-              <p className="mt-1 text-xs text-slate-400">
-                Session-aware tracking adhering to anti-inflation visitor logic.
-              </p>
+          <div className="p-8 space-y-8 max-w-6xl">
+            {/* Header & Global Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <BarChart3 className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-2xl font-bold tracking-tight text-white">
+                    Visitors & Traffic Management
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Real-time visitor telemetry, active session logs, public display settings, and visitor database management.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  disabled={loadingVisitors}
+                  onClick={loadVisitorData}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#121520] px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                  title="Reload live telemetry from database"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${loadingVisitors ? 'animate-spin text-sky-400' : ''}`} />
+                  <span>Sync Telemetry</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loadingVisitors}
+                  onClick={() => handleVisitorAction('simulate-ping')}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3.5 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-500 hover:text-white transition disabled:opacity-50"
+                  title="Simulate a real-time visitor ping to verify telemetry"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  <span>Test Telemetry Ping</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={exportVisitorTelemetry}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#121520] px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
+                  title="Export telemetry and visitor sessions as JSON"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export JSON</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loadingVisitors}
+                  onClick={() => {
+                    if (confirm('Are you sure you want to reset all visitor metrics and clear sessions?')) {
+                      handleVisitorAction('reset-all');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-3.5 py-2 text-xs font-semibold text-red-400 hover:bg-red-500 hover:text-white transition disabled:opacity-50"
+                  title="Reset all visitor counters to zero"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Reset All</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-[#0e111a] p-4 text-center">
-                <span className="text-xs text-slate-400">Total Visits</span>
-                <div className="font-mono text-2xl font-bold text-white mt-1">
-                  {data.visitorMetrics.totalVisitors}
+            {/* Live Metrics Grid */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">Total All-Time</span>
+                  <Activity className="h-4 w-4 text-sky-400" />
+                </div>
+                <div className="font-mono text-3xl font-bold text-white">
+                  {(data.visitorMetrics?.totalVisitors || 0).toLocaleString()}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="number"
+                    value={targetVisitorCount}
+                    onChange={(e) => setTargetVisitorCount(e.target.value)}
+                    placeholder="New baseline"
+                    className="w-24 rounded-lg border border-white/10 bg-[#141824] px-2 py-1 text-[11px] font-mono text-white outline-none focus:border-sky-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={loadingVisitors}
+                    onClick={() => {
+                      const count = parseInt(targetVisitorCount, 10);
+                      if (!isNaN(count) && count >= 0) {
+                        handleVisitorAction('set-base', { totalVisitors: count });
+                      }
+                    }}
+                    className="rounded-lg bg-sky-500/10 px-2.5 py-1 text-[10px] font-bold text-sky-400 hover:bg-sky-500 hover:text-white transition"
+                  >
+                    Calibrate
+                  </button>
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#0e111a] p-4 text-center">
-                <span className="text-xs text-slate-400">Today</span>
-                <div className="font-mono text-2xl font-bold text-sky-400 mt-1">
-                  {data.visitorMetrics.todayVisitors}
+
+              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">Today&apos;s Traffic</span>
+                  <Clock className="h-4 w-4 text-indigo-400" />
+                </div>
+                <div className="font-mono text-3xl font-bold text-indigo-400">
+                  {(data.visitorMetrics?.todayVisitors || 0).toLocaleString()}
+                </div>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    disabled={loadingVisitors}
+                    onClick={() => handleVisitorAction('reset-today')}
+                    className="rounded-lg border border-white/5 bg-[#141824] px-2.5 py-1 text-[10px] font-medium text-slate-400 hover:text-red-400 transition"
+                  >
+                    Reset Today to 0
+                  </button>
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#0e111a] p-4 text-center">
-                <span className="text-xs text-slate-400">This Week</span>
-                <div className="font-mono text-2xl font-bold text-indigo-400 mt-1">
-                  {data.visitorMetrics.thisWeekVisitors}
+
+              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">This Week</span>
+                  <TrendingUp className="h-4 w-4 text-purple-400" />
+                </div>
+                <div className="font-mono text-3xl font-bold text-purple-400">
+                  {(data.visitorMetrics?.thisWeekVisitors || 0).toLocaleString()}
+                </div>
+                <span className="block text-[11px] text-slate-500 pt-1">
+                  Rolling 7-day unique sessions
+                </span>
+              </div>
+
+              <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-[#0e111a] to-[#0e111a] p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-emerald-400">Live Online Now</span>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                </div>
+                <div className="font-mono text-3xl font-bold text-emerald-400">
+                  {data.visitorMetrics?.activeVisitors || 1}
+                </div>
+                <span className="block text-[11px] text-emerald-500/80 pt-1">
+                  Active within last 5 minutes
+                </span>
+              </div>
+            </div>
+
+            {/* Public Display Settings (Hero Counter) */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-sky-400" />
+                    <span>Public Homepage Visitor Counter Controls</span>
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Control how the live visitor badge appears to users in the hero section of the website.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() =>
+                    saveContentChanges({
+                      heroContent: data.heroContent,
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400 disabled:opacity-50"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>{saving ? 'Saving...' : 'Save Display Settings'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-4 flex items-center justify-between">
+                  <div>
+                    <span className="block text-xs font-semibold text-white">
+                      Display Live Visitor Counter on Site
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Shows live visitor pill on the homepage hero
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.heroContent?.showLiveVisitors !== false}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          heroContent: {
+                            ...data.heroContent,
+                            showLiveVisitors: e.target.checked,
+                          },
+                        })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Counter Badge Label
+                  </label>
+                  <input
+                    type="text"
+                    value={data.heroContent?.statsBadgeText || 'Live Explorers Exploring'}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        heroContent: {
+                          ...data.heroContent,
+                          statsBadgeText: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="e.g. Live Explorers Exploring"
+                    className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white outline-none focus:border-sky-500"
+                  />
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#0e111a] p-4 text-center">
-                <span className="text-xs text-slate-400">Active Online</span>
-                <div className="font-mono text-2xl font-bold text-emerald-400 mt-1">
-                  {data.visitorMetrics.activeVisitors}
+            </div>
+
+            {/* Live Visitor Sessions Table */}
+            <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+                    <Users className="h-4 w-4 text-emerald-400" />
+                    <span>Live & Recent Visitor Sessions ({visitorSessions.length})</span>
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Session identifiers and active ping timestamps. Sessions idle for &gt;24 hours are automatically retired.
+                  </p>
                 </div>
+
+                {visitorSessions.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={loadingVisitors}
+                    onClick={() => {
+                      if (confirm('Clear all visitor sessions from memory? (Counters remain preserved)')) {
+                        handleVisitorAction('clear-sessions');
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#141824] px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-red-400 transition"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Clear All Sessions</span>
+                  </button>
+                )}
               </div>
+
+              {visitorSessions.length === 0 ? (
+                <div className="rounded-2xl border border-white/5 bg-[#141824] p-8 text-center text-xs text-slate-400 space-y-2">
+                  <p>No active sessions currently stored.</p>
+                  <p className="text-[11px] text-slate-500">
+                    Click &quot;Test Telemetry Ping&quot; above to simulate a new visitor.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-slate-400 font-mono">
+                        <th className="pb-3 font-semibold">Session Token</th>
+                        <th className="pb-3 font-semibold">Client Hash</th>
+                        <th className="pb-3 font-semibold">First Visited</th>
+                        <th className="pb-3 font-semibold">Last Active</th>
+                        <th className="pb-3 font-semibold">Status</th>
+                        <th className="pb-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 font-mono">
+                      {visitorSessions.slice(0, 25).map((sess) => {
+                        const now = Date.now();
+                        const isLive = now - sess.lastSeen < 300000;
+                        const minutesAgo = Math.max(0, Math.round((now - sess.lastSeen) / 60000));
+
+                        return (
+                          <tr key={sess.sessionId} className="hover:bg-white/[0.02]">
+                            <td className="py-3 text-slate-200">
+                              <span className="rounded bg-white/5 px-2 py-0.5 text-[11px]">
+                                {sess.sessionId.length > 20
+                                  ? `${sess.sessionId.substring(0, 16)}...`
+                                  : sess.sessionId}
+                              </span>
+                            </td>
+                            <td className="py-3 text-slate-400 text-[11px]">
+                              {sess.ipHash || 'anon_client'}
+                            </td>
+                            <td className="py-3 text-slate-400 text-[11px]">
+                              {sess.createdAt ? new Date(sess.createdAt).toLocaleTimeString() : '—'}
+                            </td>
+                            <td className="py-3 text-slate-300 text-[11px]">
+                              {minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`}
+                            </td>
+                            <td className="py-3">
+                              {isLive ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                  <span>Active Now</span>
+                                </span>
+                              ) : (
+                                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-500">
+                                  Idle
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 text-right">
+                              <button
+                                type="button"
+                                disabled={loadingVisitors}
+                                onClick={() =>
+                                  handleVisitorAction('delete-session', {
+                                    sessionId: sess.sessionId,
+                                  })
+                                }
+                                className="rounded p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition"
+                                title="Remove session"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {visitorSessions.length > 25 && (
+                    <div className="pt-3 text-center text-[11px] text-slate-500 font-mono">
+                      Showing newest 25 of {visitorSessions.length} recorded sessions
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Popular Pages & Service Interest */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 space-y-4">
-                <h3 className="font-bold text-sm text-white">Popular Pages (Hits)</h3>
-                <div className="space-y-2">
-                  {Object.entries(data.visitorMetrics.pageViews || {}).map(([path, hits]) => (
-                    <div
-                      key={path}
-                      className="flex items-center justify-between text-xs py-1.5 border-b border-white/5"
-                    >
-                      <span className="font-mono text-slate-300">{path}</span>
-                      <span className="font-mono font-bold text-sky-400">{hits}</span>
-                    </div>
-                  ))}
+              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-4">
+                <h3 className="font-bold text-sm text-white flex items-center justify-between">
+                  <span>Popular Routes (Page Hits)</span>
+                  <span className="font-mono text-xs text-sky-400">
+                    {Object.values(data.visitorMetrics?.pageViews || {}).reduce((a, b) => a + b, 0)} Total
+                  </span>
+                </h3>
+                <div className="space-y-3 pt-1">
+                  {Object.entries(data.visitorMetrics?.pageViews || {}).length === 0 ? (
+                    <div className="text-xs text-slate-500 italic">No page views recorded yet</div>
+                  ) : (
+                    Object.entries(data.visitorMetrics?.pageViews || {})
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 10)
+                      .map(([routePath, hits]) => {
+                        const totalViews = Math.max(
+                          1,
+                          Object.values(data.visitorMetrics?.pageViews || {}).reduce((a, b) => a + b, 0)
+                        );
+                        const pct = Math.round((hits / totalViews) * 100);
+
+                        return (
+                          <div key={routePath} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-mono text-slate-300">{routePath}</span>
+                              <span className="font-mono text-sky-400 font-semibold">
+                                {hits} ({pct}%)
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-sky-500"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 space-y-4">
-                <h3 className="font-bold text-sm text-white">Service Interest Breakdown</h3>
-                <div className="space-y-2">
-                  {Object.entries(data.visitorMetrics.serviceInterest || {}).map(([serv, count]) => (
-                    <div
-                      key={serv}
-                      className="flex items-center justify-between text-xs py-1.5 border-b border-white/5"
-                    >
-                      <span className="text-slate-300">{serv}</span>
-                      <span className="font-mono font-bold text-emerald-400">{count} inquiries</span>
-                    </div>
-                  ))}
+              <div className="rounded-3xl border border-white/10 bg-[#0e111a] p-6 sm:p-8 space-y-4">
+                <h3 className="font-bold text-sm text-white flex items-center justify-between">
+                  <span>Service Interest Breakdown</span>
+                  <span className="font-mono text-xs text-emerald-400">
+                    {Object.values(data.visitorMetrics?.serviceInterest || {}).reduce((a, b) => a + b, 0)} Inquiries
+                  </span>
+                </h3>
+                <div className="space-y-3 pt-1">
+                  {Object.entries(data.visitorMetrics?.serviceInterest || {}).length === 0 ? (
+                    <div className="text-xs text-slate-500 italic">No specific service visits recorded yet</div>
+                  ) : (
+                    Object.entries(data.visitorMetrics?.serviceInterest || {})
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([serv, count]) => {
+                        const totalInterest = Math.max(
+                          1,
+                          Object.values(data.visitorMetrics?.serviceInterest || {}).reduce((a, b) => a + b, 0)
+                        );
+                        const pct = Math.round((count / totalInterest) * 100);
+
+                        return (
+                          <div key={serv} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-300 font-medium">{serv}</span>
+                              <span className="font-mono text-emerald-400 font-semibold">
+                                {count} ({pct}%)
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-emerald-500"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </div>
             </div>
@@ -5453,6 +6655,47 @@ export function AdminDashboard({ initialData }: AdminDashboardProps) {
                   }
                   className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white"
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono font-semibold uppercase text-slate-400">
+                    Social Card / Open Graph Banner Image (ogImageUrl)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('social-embed')}
+                    className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold"
+                  >
+                    <span>Open Full Social Embed Preview CMS</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                </div>
+                <div className="mt-2 flex flex-col sm:flex-row items-center gap-3">
+                  <input
+                    type="text"
+                    value={data.siteSettings.ogImageUrl || ''}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        siteSettings: { ...data.siteSettings, ogImageUrl: e.target.value },
+                      })
+                    }
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-white/10 bg-[#141824] p-3 text-xs text-white"
+                  />
+                  <label className="shrink-0 flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold text-white hover:bg-white/20 cursor-pointer">
+                    <Upload className="h-4 w-4 text-sky-400" />
+                    <span>{uploadingOgImage ? 'Uploading...' : 'Upload Banner'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingOgImage}
+                      onChange={(e) => handleSiteAssetUpload(e, 'ogImageUrl')}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-white/10 flex justify-end">

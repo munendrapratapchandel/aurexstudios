@@ -359,3 +359,52 @@ export function recordVisitor(sessionId: string, pathName: string = '/', ipHash:
     db.visitorMetrics.lastUpdated = new Date().toISOString();
   });
 }
+
+export function getVisitorSessions() {
+  const db = getDatabase();
+  return (db.sessions || []).sort((a, b) => b.lastSeen - a.lastSeen);
+}
+
+export function resetVisitorMetrics() {
+  return updateDatabase((db) => {
+    db.visitorMetrics = {
+      totalVisitors: 0,
+      todayVisitors: 0,
+      thisWeekVisitors: 0,
+      thisMonthVisitors: 0,
+      activeVisitors: 1,
+      pageViews: { '/': 1 },
+      serviceInterest: {},
+      lastUpdated: new Date().toISOString(),
+    };
+    db.sessions = [];
+  });
+}
+
+export function updateVisitorMetrics(metrics: Partial<DatabaseSchema['visitorMetrics']>) {
+  return updateDatabase((db) => {
+    db.visitorMetrics = {
+      ...db.visitorMetrics,
+      ...metrics,
+      lastUpdated: new Date().toISOString(),
+    };
+  });
+}
+
+export function deleteVisitorSession(sessionId: string) {
+  return updateDatabase((db) => {
+    db.sessions = (db.sessions || []).filter((s) => s.sessionId !== sessionId);
+    const now = Date.now();
+    db.visitorMetrics.activeVisitors = Math.max(
+      1,
+      db.sessions.filter((s) => now - s.lastSeen < 300000).length
+    );
+  });
+}
+
+export function clearVisitorSessions() {
+  return updateDatabase((db) => {
+    db.sessions = [];
+    db.visitorMetrics.activeVisitors = 1;
+  });
+}

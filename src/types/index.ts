@@ -190,6 +190,17 @@ export interface ContactGuarantee {
   icon?: string;
 }
 
+export interface DiscordTicketCardConfig {
+  enabled: boolean;
+  badge: string;
+  title: string;
+  description: string;
+  discordUrl: string;
+  buttonText: string;
+  responseTime: string;
+  features: string[];
+}
+
 export interface ContactContent {
   badge: string;
   title: string;
@@ -202,6 +213,7 @@ export interface ContactContent {
   directDiscordUsername?: string;
   directDiscordUrl?: string;
   directDiscordButtonText?: string;
+  discordTicketCard?: DiscordTicketCardConfig;
   servicesList: string[];
   budgetTiers: string[];
   timelineOptions: string[];

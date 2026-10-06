@@ -23,6 +23,7 @@ export async function GET() {
       hobbies: db.hobbies,
       skillCategories: db.skillCategories,
       visitorMetrics: db.visitorMetrics,
+      sessions: db.sessions || [],
       version: db.version,
       updatedAt: db.updatedAt,
     },
@@ -71,6 +72,12 @@ export async function PUT(req: NextRequest) {
       }
       if (Array.isArray(payload.faqs)) {
         db.faqs = payload.faqs;
+      }
+      if (payload.visitorMetrics) {
+        db.visitorMetrics = { ...db.visitorMetrics, ...payload.visitorMetrics };
+      }
+      if (Array.isArray(payload.sessions)) {
+        db.sessions = payload.sessions;
       }
     });
 

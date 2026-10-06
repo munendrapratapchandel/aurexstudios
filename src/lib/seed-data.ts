@@ -25,6 +25,21 @@ export const defaultContactContent: ContactContent = {
   directDiscordUsername: 'aurex.studio',
   directDiscordUrl: 'https://discord.gg/aurex',
   directDiscordButtonText: 'Join Discord',
+  discordTicketCard: {
+    enabled: true,
+    badge: '⚡ FAST-TRACK YOUR PROJECT',
+    title: 'Need a Faster Project Build? Join Discord & Create a Ticket',
+    description: 'Skip email delays and inquiry queues. Join our official Discord server, open a private project ticket, and collaborate directly with our lead developers for instant scoping and expedited delivery.',
+    discordUrl: 'https://discord.gg/aurex',
+    buttonText: 'Join Discord & Open Ticket',
+    responseTime: '< 15 Mins Response',
+    features: [
+      'Instant 1-on-1 access to lead developers',
+      'Private dedicated ticket channel for your build',
+      'Real-time sprint updates & interactive previews',
+      'Priority delivery queue for urgent builds',
+    ],
+  },
   servicesList: [
     'Web Development',
     'Minecraft Development',

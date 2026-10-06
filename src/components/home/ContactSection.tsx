@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ContactForm } from '../ContactForm';
+import { DiscordTicketCard } from '../DiscordTicketCard';
 import { Sparkles, MessageSquare, Terminal, Mail, CheckCircle2 } from 'lucide-react';
 import { SocialLink, ContactContent } from '@/types';
 
@@ -20,6 +21,13 @@ export function ContactSection({ socials, content }: ContactSectionProps) {
   return (
     <section id="contact" className="relative py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Fast Project Build / Discord Ticket Card */}
+        {content?.discordTicketCard?.enabled !== false && (
+          <div className="mb-12">
+            <DiscordTicketCard config={content?.discordTicketCard} fallbackUrl={discordUrl} />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           {/* Left info column */}
           <div className="lg:col-span-5 space-y-6">
